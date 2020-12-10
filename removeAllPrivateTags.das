@@ -30,11 +30,3 @@ scannerName2 := replace[scannerName1, "_null", ""]
 
 
 removeAllPrivateTags
-
-(0010,0010) := "ANON_NAME" // Anonymised Patient Name
-
-project := "TEST_UPLOAD"
-
-session := format["{0}_{1}{2}", scanDate2, scanTime2, scannerName2]
-
-(0010,4000) := format["Project: TEST_UPLOAD; Subject: ANON_NAME; Session: {0}; AA:True", session] // Patient Comments

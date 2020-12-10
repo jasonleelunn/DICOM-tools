@@ -45,14 +45,13 @@ def read_session_file():
 
 def copy_data(prearchive_path, info_dict, project_id):
     script_path = askopenfilename(title="Choose an anonymisation profile")
-    print(info_dict)
+    # print(info_dict)
     for anon_id, timestamp in info_dict.items():
         now = str(datetime.datetime.now())[:19]
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
         new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
-        # for root, dirs, files in os.walk(prearchive_path + timestamp):
-        for root, dirs, files in os.walk(prearchive_path):
+        for root, dirs, files in os.walk(prearchive_path + timestamp):
             for file in files:
                 if file.endswith(".dcm"):
                     filepath = os.path.join(root, file)
@@ -130,6 +129,7 @@ def main():
     # print("session: timestamp", prearchive_dictionary)
     # print("session: anon_id", wanted_list)
 
+    # DOESNT WORK IF MORE THAN ONE MATCHING SESSION PER PATIENT IN PRE-ARCHIVE!!!!
     matched_dict = {wanted_list[k]: prearchive_dictionary[k] for k in prearchive_dictionary.keys() & wanted_list.keys()}
 
     prearchive_path = file_info(matched_dict)
