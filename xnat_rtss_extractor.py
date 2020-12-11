@@ -87,7 +87,7 @@ def extraction(domain, user, pw, project, input_list):
 
         try:
             experiments_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                               f'/experiments', auth=(user, pw))
+                                               f'/experiments', auth=(user, pw), verify=False)
             print(experiments_request.content)
             experiment_json = experiments_request.json()
             experiment_list = []
@@ -97,14 +97,14 @@ def extraction(domain, user, pw, project, input_list):
 
             if match_exp:
                 scans_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                             f'/experiments/{match_exp[0]}/scans', auth=(user, pw))
+                                             f'/experiments/{match_exp[0]}/scans', auth=(user, pw), verify=False)
                 scan_json = scans_request.json()
                 scan_list = []
                 [scan_list.append(scan['ID']) for scan in scan_json['ResultSet']['Result']]
 
                 for scan in scan_list:
                     files_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                                 f'/experiments/{experiment}/scans/{scan}/files', auth=(user, pw))
+                                                 f'/experiments/{experiment}/scans/{scan}/files', auth=(user, pw), verify=False)
                     file_json = files_request.json()
                     file_list = []
                     [file_list.append(file['Name']) for file in file_json['ResultSet']['Result']]
@@ -114,7 +114,7 @@ def extraction(domain, user, pw, project, input_list):
                     for file in matching:
                         file_download = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
                                                      f'/experiments/{experiment}/scans/{scan}/files/{file}',
-                                                     auth=(user, pw))
+                                                     auth=(user, pw), verify=False)
 
                         now = str(datetime.datetime.now())[:19]
                         now = now.replace(":", "_")
