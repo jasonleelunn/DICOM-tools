@@ -82,43 +82,55 @@ def extraction(domain, user, pw, project, input_list):
     for patient in range(len(input_list)):
 
         name = input_list[patient][0]
-        experiment = input_list[patient][1]
+        experiment = input_list[patient][1][:16]
         anon_id = input_list[patient][2]
 
         try:
-            scans_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                         f'/experiments/{experiment}/scans', auth=(user, pw))
-            scan_json = scans_request.json()
-            scan_list = []
-            [scan_list.append(scan['ID']) for scan in scan_json['ResultSet']['Result']]
+            experiments_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
+                                               f'/experiments', auth=(user, pw))
+            print(experiments_request.content)
+            experiment_json = experiments_request.json()
+            experiment_list = []
+            [experiment_list.append(exp['label']) for exp in experiment_json['ResultSet']['Result']]
 
-            for scan in scan_list:
-                files_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                             f'/experiments/{experiment}/scans/{scan}/files', auth=(user, pw))
-                file_json = files_request.json()
-                file_list = []
-                [file_list.append(file['Name']) for file in file_json['ResultSet']['Result']]
+            match_exp = [f for f in experiment_list if experiment in f]
 
-                matching = [f for f in file_list if "RTSTRUCT" in f]
+            if match_exp:
+                scans_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
+                                             f'/experiments/{match_exp[0]}/scans', auth=(user, pw))
+                scan_json = scans_request.json()
+                scan_list = []
+                [scan_list.append(scan['ID']) for scan in scan_json['ResultSet']['Result']]
 
-                for file in matching:
-                    file_download = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
-                                                 f'/experiments/{experiment}/scans/{scan}/files/{file}',
-                                                 auth=(user, pw))
+                for scan in scan_list:
+                    files_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
+                                                 f'/experiments/{experiment}/scans/{scan}/files', auth=(user, pw))
+                    file_json = files_request.json()
+                    file_list = []
+                    [file_list.append(file['Name']) for file in file_json['ResultSet']['Result']]
 
-                    now = str(datetime.datetime.now())[:19]
-                    now = now.replace(":", "_")
-                    now = now.replace(" ", "_")
+                    matching = [f for f in file_list if "RTSTRUCT" in f]
 
-                    file_path = extraction_path + anon_id + "_" + now + ".dcm"
+                    for file in matching:
+                        file_download = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
+                                                     f'/experiments/{experiment}/scans/{scan}/files/{file}',
+                                                     auth=(user, pw))
 
-                    with open(file_path, 'wb') as save_file:
-                        save_file.write(file_download.content)
-                    anonymisation(script_path, file_path, anon_id, project)
+                        now = str(datetime.datetime.now())[:19]
+                        now = now.replace(":", "_")
+                        now = now.replace(" ", "_")
 
-                    found_counter += 1
+                        file_path = extraction_path + anon_id + "_" + now + ".dcm"
 
-                    break
+                        with open(file_path, 'wb') as save_file:
+                            save_file.write(file_download.content)
+                        anonymisation(script_path, file_path, anon_id, project)
+
+                        found_counter += 1
+
+                        break
+            else:
+                print(f"Patient {name} found, but session {experiment} not found")
         except:
             not_found_list.append(name)
 
@@ -133,8 +145,10 @@ def main():
     found_count, non_list = extraction(dom, u, pw, project, wanted_list)
 
     print(f"Found {found_count} RTSTRUCT files for {len(wanted_list)} patients")
-    print(f"Patients not found;")
-    print(*non_list, sep='\n')
+
+    if non_list:
+        print(f"Patients not found;")
+        print(*non_list, sep='\n')
 
 
 if __name__ == "__main__":
