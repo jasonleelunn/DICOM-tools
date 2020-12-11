@@ -82,13 +82,12 @@ def extraction(domain, user, pw, project, input_list):
     for patient in range(len(input_list)):
 
         name = input_list[patient][0]
-        experiment = input_list[patient][1][:16]
+        experiment = input_list[patient][1][:15]
         anon_id = input_list[patient][2]
 
         try:
             experiments_request = requests.get(f'{domain}/data/projects/{project}/subjects/{name}'
                                                f'/experiments', auth=(user, pw), verify=False)
-            print(experiments_request.content)
             experiment_json = experiments_request.json()
             experiment_list = []
             [experiment_list.append(exp['label']) for exp in experiment_json['ResultSet']['Result']]
