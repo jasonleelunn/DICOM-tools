@@ -65,6 +65,8 @@ def rtsedit(input_data, wrong_list):
 
         if not error_bool and not output_bool:
             clean_edit = True
+            break
+        else:
             roi_info = edit_output
 
     if not clean_edit:
