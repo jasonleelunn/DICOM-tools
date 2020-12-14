@@ -17,13 +17,9 @@ from tkinter.filedialog import askopenfilename
 
 
 def get_login_details():
-    # domain = input(f"Enter XNAT Domain: ")
-    # username = input(f"Enter Username for {domain}: ")
-    # password = input(f"Enter Password for {username}@{domain}: ")
-
-    domain = "http://xnatdev.xnat.org"
-    username = "admin"
-    password = "TCIABigMemes"
+    domain = input(f"Enter XNAT Domain: ")
+    username = input(f"Enter Username for {domain}: ")
+    password = input(f"Enter Password for {username}@{domain}: ")
 
     return domain, username, password
 
@@ -126,8 +122,8 @@ def anonymisation(script_path, file_path, anon_id, project_id):
 
 
 def main():
-    # project = input(f"Enter Project ID: ")
-    project = "Unassigned"
+    project = input(f"Enter Project ID: ")
+    # project = "Unassigned"
     dom, u, pw = get_login_details()
     wanted_list = read_session_file()
     prearchive_dictionary = get_xnat_session_list(dom, u, pw, project)
