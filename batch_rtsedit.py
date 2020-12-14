@@ -60,19 +60,30 @@ def rtsedit(input_data, wrong_list):
             # raise SystemExit
         error_bool = re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE)
         edit_output = edit.stdout.read().decode('utf-8')
+        print(edit_output)
         output_bool = re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE)
 
-        if not error_bool and output_bool:
+        if not error_bool and not output_bool:
             clean_edit = True
+            roi_info = edit_output
 
     if not clean_edit:
-        wrong_list.append(anon_id)
+        wrong_list[anon_id] = roi_info
+
+
+def save_summary(problems_dict):
+    now = str(datetime.datetime.now())[19:]
+    now = now.replace(":", "_")
+    now = now.replace(" ", "_")
+
+    with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w') as file:
+        file.write(problems_dict)
 
 
 def main():
     data_list = read_input_file()
     count = 0
-    wrong_list = []
+    wrong_list = {}
 
     for data in data_list:
         count += 1
@@ -80,13 +91,14 @@ def main():
         rtsedit(data, wrong_list)
 
     if wrong_list:
-        print(f"Files not edited correctly;")
-        print(*wrong_list, sep='\n')
-        print(f"Patients not edited correctly = {len(wrong_list)}/{len(data_list)}")
+        print(f"Patients for which files were not edited correctly;")
+        print(*wrong_list.keys(), sep='\n')
+        print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
+        save_summary(wrong_list)
 
     print("\nBatch rtsedit Complete!")
 
 
 if __name__ == "__main__":
-    rtss_folder = input("Absolute path to files: ")
+    rtss_folder = input("Path to files: ")
     main()
