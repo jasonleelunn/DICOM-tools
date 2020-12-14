@@ -54,15 +54,15 @@ def rtsedit(input_data, wrong_list):
         edit = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         edit_error = edit.stderr.read().decode('utf-8')
-        if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
-            print("Error in rtsedit process;\n\n", edit_error)
-            wrong_list.append([anon_id, "ERROR"])
+        # if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
+        #     print("Error in rtsedit process;\n\n", edit_error)
+        #     wrong_list.append([anon_id, "ERROR"])
             # raise SystemExit
 
         edit_output = edit.stdout.read().decode('utf-8')
         if not re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE):
             clean_edit = True
-    
+
     if not clean_edit:
         wrong_list.append(anon_id)
 
