@@ -20,44 +20,50 @@ def read_input_file():
 
 
 def find_file(anon_id):
-    filepath = None
+    filepaths = []
     for root, dirs, files in os.walk("extracted"):
         for file in files:
             if file.endswith(".dcm") and anon_id in file:
-                filepath = os.path.join(root, file)
+                filepaths.append(os.path.join(root, file))
 
-    return filepath
+    return filepaths
 
 
 def rtsedit(input_data, wrong_list):
+    clean_edit = False
 
     anon_id = input_data[0]
     include_rois = input_data[1:]
 
     edit_path = "etherj-cli-tools/bin/rtsedit"
 
-    now = str(datetime.datetime.now())[:19]
-    now = now.replace(":", "_")
-    now = now.replace(" ", "_")
-
-    output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
-    output_file = "modified/" + output_file_name
-
-    file = find_file(anon_id)
+    files = find_file(anon_id)
     # file = "rtss_test/DICOM/anon_rtss.dcm"
 
-    command = f"{edit_path} --label MOD_+ --include {' '.join(include_rois)} --output {output_file} {file}"
+    for file in files:
 
-    edit = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        now = str(datetime.datetime.now())
+        now = now.replace(":", "_")
+        now = now.replace(" ", "_")
 
-    edit_error = edit.stderr.read().decode('utf-8')
-    if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
-        print("Error in rtsedit process;\n\n", edit_error)
-        wrong_list.append([anon_id, "ERROR"])
-        # raise SystemExit
+        output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
+        output_file = "modified/" + output_file_name
 
-    edit_output = edit.stdout.read().decode('utf-8')
-    if re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE):
+        command = f"{edit_path} --label MOD_+ --include {' '.join(include_rois)} --output {output_file} {file}"
+
+        edit = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        edit_error = edit.stderr.read().decode('utf-8')
+        if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
+            print("Error in rtsedit process;\n\n", edit_error)
+            wrong_list.append([anon_id, "ERROR"])
+            # raise SystemExit
+
+        edit_output = edit.stdout.read().decode('utf-8')
+        if not re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE):
+            clean_edit = True
+    
+    if not clean_edit:
         wrong_list.append(anon_id)
 
 
