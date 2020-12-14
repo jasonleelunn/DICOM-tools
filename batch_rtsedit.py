@@ -32,7 +32,7 @@ def find_file(anon_id):
 def rtsedit(input_data, wrong_list):
     clean_edit = False
 
-    anon_id = input_data[0]
+    anon_id = input_data[0][1:11]
     include_rois = input_data[1:]
 
     edit_path = "etherj-cli-tools/bin/rtsedit"
@@ -78,8 +78,8 @@ def save_summary(problems_dict):
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
 
-    with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w') as file:
-        file.write(problems_dict)
+    with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w') as f:
+        print(problems_dict, file=f)
 
 
 def main():
