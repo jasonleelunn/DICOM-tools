@@ -8,6 +8,9 @@ import subprocess
 import requests
 import datetime
 from tkinter.filedialog import askopenfilename
+from urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
 def get_login_details():
@@ -127,7 +130,6 @@ def extraction(domain, user, pw, project, input_list):
 
                         found_counter += 1
 
-                        break
             else:
                 print(f"Patient {name} found, but session {experiment} not found")
         except:

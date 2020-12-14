@@ -53,7 +53,8 @@ def rtsedit(input_data, wrong_list):
     edit_error = edit.stderr.read().decode('utf-8')
     if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
         print("Error in rtsedit process;\n\n", edit_error)
-        raise SystemExit
+        wrong_list.append([anon_id, "ERROR"])
+        # raise SystemExit
 
     edit_output = edit.stdout.read().decode('utf-8')
     if re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE):

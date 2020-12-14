@@ -17,9 +17,13 @@ from tkinter.filedialog import askopenfilename
 
 
 def get_login_details():
-    domain = input(f"Enter XNAT Domain: ")
-    username = input(f"Enter Username for {domain}: ")
-    password = input(f"Enter Password for {username}@{domain}: ")
+    # domain = input(f"Enter XNAT Domain: ")
+    # username = input(f"Enter Username for {domain}: ")
+    # password = input(f"Enter Password for {username}@{domain}: ")
+
+    domain = "http://xnatdev.xnat.org"
+    username = "admin"
+    password = "TCIABigMemes"
 
     return domain, username, password
 
@@ -47,13 +51,14 @@ def copy_data(prearchive_path, info_dict, project_id):
     script_path = askopenfilename(title="Choose an anonymisation profile")
     # print(info_dict)
     for anon_id, timestamp in info_dict.items():
-        now = str(datetime.datetime.now())[:19]
+        # anon_id = anon_id[11:]
+        now = str(datetime.datetime.now())
         now = now.replace(":", "_")
         now = now.replace(" ", "_")
         new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
         for root, dirs, files in os.walk(prearchive_path + timestamp):
             for file in files:
-                if file.endswith(".dcm"):
+                if file.endswith(".dcm") and "RTSTRUCT" in file:
                     filepath = os.path.join(root, file)
                     shutil.copy(filepath, new_location)
                     anonymisation(script_path, new_location, anon_id, project_id)
@@ -67,7 +72,7 @@ def file_info(timestamps_dict):
     for folder in timestamps_dict.values():
         for root, dirs, files in os.walk(pre_path + folder):
             for file in files:
-                if file.endswith(".dcm"):
+                if file.endswith(".dcm") and "RTSTRUCT" in file:
                     filepath = os.path.join(root, file)
                     bytes_total += os.stat(filepath).st_size
     print(f"Total size of data found: {bytes_total/1000**3}GB")
@@ -121,16 +126,15 @@ def anonymisation(script_path, file_path, anon_id, project_id):
 
 
 def main():
-    project = input(f"Enter Project ID: ")
-    # project = "Unassigned"
+    # project = input(f"Enter Project ID: ")
+    project = "Unassigned"
     dom, u, pw = get_login_details()
     wanted_list = read_session_file()
     prearchive_dictionary = get_xnat_session_list(dom, u, pw, project)
     # print("session: timestamp", prearchive_dictionary)
     # print("session: anon_id", wanted_list)
 
-    # DOESNT WORK IF MORE THAN ONE MATCHING SESSION PER PATIENT IN PRE-ARCHIVE!!!!
-    matched_dict = {wanted_list[k]: prearchive_dictionary[k] for k in prearchive_dictionary.keys() & wanted_list.keys()}
+    matched_dict = {wanted_list[k]+f"_f{it}": prearchive_dictionary[k] for it, k in enumerate(prearchive_dictionary.keys() & wanted_list.keys())}
 
     prearchive_path = file_info(matched_dict)
 
