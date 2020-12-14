@@ -48,14 +48,16 @@ def copy_data(prearchive_path, info_dict, project_id):
     # print(info_dict)
     for anon_id, timestamp in info_dict.items():
         # anon_id = anon_id[11:]
-        now = str(datetime.datetime.now())
-        now = now.replace(":", "_")
-        now = now.replace(" ", "_")
-        new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
+
         for root, dirs, files in os.walk(prearchive_path + timestamp):
             for file in files:
-                if file.endswith(".dcm") and "RTSTRUCT" in file:
+                if file.endswith(".dcm"):
                     filepath = os.path.join(root, file)
+
+                    now = str(datetime.datetime.now())
+                    now = now.replace(":", "_")
+                    now = now.replace(" ", "_")
+                    new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
                     shutil.copy(filepath, new_location)
                     anonymisation(script_path, new_location, anon_id, project_id)
 
@@ -68,7 +70,7 @@ def file_info(timestamps_dict):
     for folder in timestamps_dict.values():
         for root, dirs, files in os.walk(pre_path + folder):
             for file in files:
-                if file.endswith(".dcm") and "RTSTRUCT" in file:
+                if file.endswith(".dcm"):
                     filepath = os.path.join(root, file)
                     bytes_total += os.stat(filepath).st_size
     print(f"Total size of data found: {bytes_total/1000**3}GB")
