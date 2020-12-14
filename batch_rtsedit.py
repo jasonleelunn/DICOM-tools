@@ -58,9 +58,11 @@ def rtsedit(input_data, wrong_list):
         #     print("Error in rtsedit process;\n\n", edit_error)
         #     wrong_list.append([anon_id, "ERROR"])
             # raise SystemExit
-
+        error_bool = re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE)
         edit_output = edit.stdout.read().decode('utf-8')
-        if not re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE):
+        output_bool = re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE)
+
+        if not error_bool and output_bool:
             clean_edit = True
 
     if not clean_edit:
@@ -80,6 +82,7 @@ def main():
     if wrong_list:
         print(f"Files not edited correctly;")
         print(*wrong_list, sep='\n')
+        print(f"Patients not edited correctly = {len(wrong_list)}/{len(data_list)}")
 
     print("\nBatch rtsedit Complete!")
 
