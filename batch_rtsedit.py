@@ -21,7 +21,7 @@ def read_input_file():
 
 def find_file(anon_id):
     filepaths = []
-    for root, dirs, files in os.walk("extracted"):
+    for root, dirs, files in os.walk(rtss_folder):
         for file in files:
             if file.endswith(".dcm") and anon_id in file:
                 filepaths.append(os.path.join(root, file))
@@ -85,4 +85,5 @@ def main():
 
 
 if __name__ == "__main__":
+    rtss_folder = input("Absolute path to files: ")
     main()
