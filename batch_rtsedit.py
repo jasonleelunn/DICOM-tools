@@ -6,6 +6,7 @@
 
 import re
 import csv
+import json
 import os
 import subprocess
 import datetime
@@ -14,6 +15,7 @@ from tkinter.filedialog import askopenfilename
 
 def read_input_file():
     filename = askopenfilename(title="Select an Input File")
+    # filename = "batch_test.csv"
     with open(filename, 'r') as file:
         wanted_list = list(csv.reader(file, delimiter=',', skipinitialspace=True))
     return wanted_list
@@ -32,7 +34,7 @@ def find_file(anon_id):
 def rtsedit(input_data, wrong_list):
     clean_edit = False
 
-    anon_id = input_data[0][1:11]
+    anon_id = input_data[0]
     include_rois = input_data[1:]
 
     edit_path = "etherj-cli-tools/bin/rtsedit"
@@ -49,9 +51,13 @@ def rtsedit(input_data, wrong_list):
         output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
         output_file = "modified/" + output_file_name
 
-        command = f"{edit_path} --label MOD_+ --include {' '.join(include_rois)} --output {output_file} {file}"
+        joint = '\" \"'
+        rois = re.split('(?<![a-zA-Z0-9]) ', f"\"{joint.join(include_rois)}\"")
 
-        edit = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
+        command_list = [edit_path, "--label", "MOD_+", "--include", *rois, "--output", output_file, file]
+
+        edit = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         edit_error = edit.stderr.read().decode('utf-8')
         # if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
@@ -66,7 +72,7 @@ def rtsedit(input_data, wrong_list):
         if not error_bool and not output_bool:
             clean_edit = True
             break
-        else:
+        elif edit_output:
             roi_info = edit_output
 
     if not clean_edit:
@@ -74,12 +80,13 @@ def rtsedit(input_data, wrong_list):
 
 
 def save_summary(problems_dict):
-    now = str(datetime.datetime.now())[19:]
+    now = str(datetime.datetime.now())
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
 
-    with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w') as f:
-        print(problems_dict, file=f)
+    with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w', newline='\r\n') as f:
+        print(problems_dict)
+        json.dump(problems_dict, f, sort_keys=True, indent=0)
 
 
 def main():
@@ -103,4 +110,5 @@ def main():
 
 if __name__ == "__main__":
     rtss_folder = input("Path to files: ")
+    # rtss_folder = "rtss_test"
     main()
