@@ -33,6 +33,7 @@ def find_file(anon_id):
 
 def rtsedit(input_data, wrong_list):
     clean_edit = False
+    roi_info = "BLANK"
 
     anon_id = input_data[0]
     include_rois = input_data[1:]
@@ -72,11 +73,17 @@ def rtsedit(input_data, wrong_list):
         if not error_bool and not output_bool:
             clean_edit = True
             break
-        elif edit_output:
+        elif edit_output and output_bool:
             roi_info = edit_output
+            move_file(output_file, output_file_name)
 
     if not clean_edit:
         wrong_list[anon_id] = roi_info
+
+
+def move_file(filepath, filename):
+    move_cmd = f"mv {filepath} modified/bad_edit/{filename}"
+    move = subprocess.Popen(move_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def save_summary(problems_dict):
