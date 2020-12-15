@@ -53,7 +53,7 @@ def rtsedit(input_data, wrong_list):
         output_file = "modified/" + output_file_name
 
         joint = '\" \"'
-        rois = re.split('(?<![a-zA-Z0-9]) ', f"\"{joint.join(include_rois)}\"")
+        rois = re.split('(?<![a-zA-Z0-9-%]) ', f"\"{joint.join(include_rois)}\"")
 
         # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
         command_list = [edit_path, "--label", "MOD_+", "--include", *rois, "--output", output_file, file]
@@ -92,7 +92,7 @@ def save_summary(problems_dict):
     now = now.replace(" ", "_")
 
     with open(f"modified/error_logs/{now}_batch_rtsedit_errors.txt", 'w', newline='\r\n') as f:
-        print(problems_dict)
+        # print(problems_dict)
         json.dump(problems_dict, f, sort_keys=True, indent=0)
 
 
