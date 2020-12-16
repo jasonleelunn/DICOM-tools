@@ -10,6 +10,7 @@ import json
 import os
 import subprocess
 import datetime
+import pydicom
 from tkinter.filedialog import askopenfilename
 
 
@@ -31,6 +32,37 @@ def find_file(anon_id):
     return filepaths
 
 
+def get_roi_labels(filename):
+    file = pydicom.read_file(filename, force=True)
+    labels = []
+    file_type_check = False
+    if 'RTSTRUCT' in file.Modality:
+        file_type_check = True
+        sequences = file.StructureSetROISequence
+
+        for sequence in sequences:
+            label = sequence.ROIName
+            labels.append(label)
+    else:
+        msg = "The file object is not recognised as being RTS"
+        # raise Exception(msg)
+
+    return labels, file_type_check
+
+
+def compare_labels(requested_labels, all_labels, patient_id):
+    print(f"ALL LABELS for {patient_id}: ", all_labels)
+    print(f"WANTED LABELS for {patient_id}: ", requested_labels)
+
+    all_check = all(elem in all_labels for elem in requested_labels)
+
+    if all_check:
+        print("All requested ROIs present")
+    else:
+        missing = list(set(requested_labels).difference(all_labels))
+        print(f"MISSING LABELS for {patient_id}: ", missing)
+
+
 def rtsedit(input_data, wrong_list):
     clean_edit = False
     roi_info = "BLANK"
@@ -41,41 +73,45 @@ def rtsedit(input_data, wrong_list):
     edit_path = "etherj-cli-tools/bin/rtsedit"
 
     files = find_file(anon_id)
-    # file = "rtss_test/DICOM/anon_rtss.dcm"
 
     for file in files:
 
-        now = str(datetime.datetime.now())
-        now = now.replace(":", "_")
-        now = now.replace(" ", "_")
+        found_labels, file_type_bool = get_roi_labels(file)
 
-        output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
-        output_file = "modified/" + output_file_name
+        if file_type_bool:
+            compare_labels(include_rois, found_labels, anon_id)
+            continue
+            now = str(datetime.datetime.now())
+            now = now.replace(":", "_")
+            now = now.replace(" ", "_")
 
-        joint = '\" \"'
-        rois = re.split('(?<![a-zA-Z0-9-%]) ', f"\"{joint.join(include_rois)}\"")
+            output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
+            output_file = "modified/" + output_file_name
 
-        # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
-        command_list = [edit_path, "--label", "MOD_+", "--include", *rois, "--output", output_file, file]
+            joint = '\" \"'
+            rois = re.split('(?<![a-zA-Z0-9-%]) ', f"\"{joint.join(include_rois)}\"")
 
-        edit = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
+            command_list = [edit_path, "--label", "MOD_+", "--include", *rois, "--output", output_file, file]
 
-        edit_error = edit.stderr.read().decode('utf-8')
-        # if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
-        #     print("Error in rtsedit process;\n\n", edit_error)
-        #     wrong_list.append([anon_id, "ERROR"])
-            # raise SystemExit
-        error_bool = re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE)
-        edit_output = edit.stdout.read().decode('utf-8')
-        print(edit_output)
-        output_bool = re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE)
+            edit = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if not error_bool and not output_bool:
-            clean_edit = True
-            break
-        elif edit_output and output_bool:
-            roi_info = edit_output
-            move_file(output_file, output_file_name)
+            edit_error = edit.stderr.read().decode('utf-8')
+            # if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
+            #     print("Error in rtsedit process;\n\n", edit_error)
+            #     wrong_list.append([anon_id, "ERROR"])
+                # raise SystemExit
+            error_bool = re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE)
+            edit_output = edit.stdout.read().decode('utf-8')
+            print(edit_output)
+            output_bool = re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE)
+
+            if not error_bool and not output_bool:
+                clean_edit = True
+                break
+            elif edit_output and output_bool:
+                roi_info = edit_output
+                move_file(output_file, output_file_name)
 
     if not clean_edit:
         wrong_list[anon_id] = roi_info
@@ -103,7 +139,7 @@ def main():
 
     for data in data_list:
         count += 1
-        print(f"Editing RTSTRUCT for patient {data[0]} ({count}/{len(data_list)})")
+        print(f"\nEditing RTSTRUCT for patient {data[0]} ({count}/{len(data_list)})")
         rtsedit(data, wrong_list)
 
     if wrong_list:
