@@ -12,6 +12,7 @@ import subprocess
 import datetime
 import pydicom
 from tkinter.filedialog import askopenfilename
+from difflib import get_close_matches
 
 
 def read_input_file():
@@ -51,19 +52,33 @@ def get_roi_labels(filename):
 
 
 def compare_labels(requested_labels, all_labels, patient_id):
-    print(f"ALL LABELS for {patient_id}: ", all_labels)
-    print(f"WANTED LABELS for {patient_id}: ", requested_labels)
 
+    missing = []
     all_check = all(elem in all_labels for elem in requested_labels)
 
-    if all_check:
-        print("All requested ROIs present")
-    else:
+    if not all_check:
         missing = list(set(requested_labels).difference(all_labels))
-        print(f"MISSING LABELS for {patient_id}: ", missing)
+        # print(f"MISSING LABELS for {patient_id}: ", missing)
+
+    return missing
 
 
-def rtsedit(input_data, wrong_list):
+def label_conversion(missing_list, full_list, changes, anon_id):
+    matches = []
+    for missing in missing_list:
+        match = get_close_matches(missing, full_list, n=1, cutoff=0.85)
+        # print(f"MATCHES FOUND for {missing}: ", type(match))
+        if match:
+            matches.append(match[0])
+            alter_string = f" \'{missing}\' ==> \'{match[0]}\'"
+            changes.append((anon_id, alter_string))
+        else:
+            matches.append(missing)
+
+    return matches
+
+
+def rtsedit(input_data, wrong_list, changes_list):
     clean_edit = False
     roi_info = "BLANK"
 
@@ -75,12 +90,19 @@ def rtsedit(input_data, wrong_list):
     files = find_file(anon_id)
 
     for file in files:
-
         found_labels, file_type_bool = get_roi_labels(file)
 
         if file_type_bool:
-            compare_labels(include_rois, found_labels, anon_id)
-            continue
+            missing_labels = compare_labels(include_rois, found_labels, anon_id)
+
+            if missing_labels:
+                include_rois = [e for e in include_rois if e not in missing_labels]
+
+                converted_labels = label_conversion(missing_labels, found_labels, changes_list, anon_id)
+                include_rois += converted_labels
+                # print(f"UPDATED LABELS for {anon_id}: ", include_rois)
+
+            # continue
             now = str(datetime.datetime.now())
             now = now.replace(":", "_")
             now = now.replace(" ", "_")
@@ -122,7 +144,7 @@ def move_file(filepath, filename):
     move = subprocess.Popen(move_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
-def save_summary(problems_dict):
+def save_summary(problems_dict, changes_list):
     now = str(datetime.datetime.now())
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -131,22 +153,27 @@ def save_summary(problems_dict):
         # print(problems_dict)
         json.dump(problems_dict, f, sort_keys=True, indent=0)
 
+    with open(f"modified/error_logs/{now}_batch_rtsedit_changes.csv", 'w', newline='') as file:
+        write = csv.writer(file, delimiter=',')
+        write.writerows(changes_list)
+
 
 def main():
     data_list = read_input_file()
     count = 0
     wrong_list = {}
+    changes_list = []
 
     for data in data_list:
         count += 1
         print(f"\nEditing RTSTRUCT for patient {data[0]} ({count}/{len(data_list)})")
-        rtsedit(data, wrong_list)
+        rtsedit(data, wrong_list, changes_list)
 
     if wrong_list:
         print(f"Patients for which files were not edited correctly;")
         print(*wrong_list.keys(), sep='\n')
         print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
-        save_summary(wrong_list)
+        save_summary(wrong_list, changes_list)
 
     print("\nBatch rtsedit Complete!")
 
