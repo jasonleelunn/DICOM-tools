@@ -14,10 +14,10 @@ def get_roi_labels(file):
     labels = []
 
     if 'RTSTRUCT' in file.Modality:
-        sequences = file.StructureSetfileSequence
+        sequences = file.StructureSetROISequence
 
         for sequence in sequences:
-            label = sequence.fileName
+            label = sequence.ROIName
             labels.append(label)
     else:
         msg = "The file object is not recognised as being RTS or SEG."
