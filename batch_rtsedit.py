@@ -66,8 +66,8 @@ def compare_labels(requested_labels, all_labels, patient_id):
 def label_conversion(missing_list, full_list, changes, anon_id):
     matches = []
     for missing in missing_list:
-        match = get_close_matches(missing, full_list, n=1, cutoff=0.85)
-        # print(f"MATCHES FOUND for {missing}: ", type(match))
+        match = get_close_matches(missing, full_list, n=1, cutoff=0.75)
+        # print(f"MATCHES FOUND for {missing}: ", match)
         if match:
             matches.append(match[0])
             alter_string = f" \'{missing}\' ==> \'{match[0]}\'"
@@ -83,7 +83,7 @@ def rtsedit(input_data, wrong_list, changes_list):
     roi_info = "BLANK"
 
     anon_id = input_data[0]
-    include_rois = input_data[1:]
+    wanted_labels = input_data[1:]
 
     edit_path = "etherj-cli-tools/bin/rtsedit"
 
@@ -93,10 +93,10 @@ def rtsedit(input_data, wrong_list, changes_list):
         found_labels, file_type_bool = get_roi_labels(file)
 
         if file_type_bool:
-            missing_labels = compare_labels(include_rois, found_labels, anon_id)
+            missing_labels = compare_labels(wanted_labels, found_labels, anon_id)
 
             if missing_labels:
-                include_rois = [e for e in include_rois if e not in missing_labels]
+                include_rois = [e for e in wanted_labels if e not in missing_labels]
 
                 converted_labels = label_conversion(missing_labels, found_labels, changes_list, anon_id)
                 include_rois += converted_labels
