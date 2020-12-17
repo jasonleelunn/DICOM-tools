@@ -66,14 +66,32 @@ def compare_labels(requested_labels, all_labels, patient_id):
 def label_conversion(missing_list, full_list, changes, anon_id):
     matches = []
     for missing in missing_list:
-        match = get_close_matches(missing, full_list, n=1, cutoff=0.75)
-        # print(f"MATCHES FOUND for {missing}: ", match)
+        match = get_close_matches(missing, full_list, n=3, cutoff=0.75)
+        print(f"MATCHES FOUND for {missing}: ", match)
         if match:
-            matches.append(match[0])
-            alter_string = f" \'{missing}\' ==> \'{match[0]}\'"
-            changes.append((anon_id, alter_string))
+
+            digits_only_missing = ''.join(filter(str.isdigit, missing))
+            if digits_only_missing != "":
+                for i in range(len(match)):
+                    digits_only_match = ''.join(filter(str.isdigit, match[i]))
+
+                    if digits_only_missing == digits_only_match:
+                        matches.append(match[i])
+                        alter_string = f" \'{missing}\' ==> \'{match[i]}\' ({i+1}/{len(match)})"
+                        changes.append((anon_id, alter_string))
+                        break
+                    else:
+                        alter_string = f" \'{missing}\' IS NOT \'{match[i]}\' ({i+1}/{len(match)})"
+                        changes.append((anon_id, alter_string))
+
+            else:
+                matches.append(match[0])
+                alter_string = f" \'{missing}\' ==> \'{match[0]}\'"
+                changes.append((anon_id, alter_string))
         else:
             matches.append(missing)
+            no_string = f"Couldn't find replacement for \'{missing}\'"
+            changes.append((anon_id, no_string))
 
     return matches
 
