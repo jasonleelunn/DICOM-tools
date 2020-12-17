@@ -67,7 +67,7 @@ def label_conversion(missing_list, full_list, changes, anon_id):
     matches = []
     for missing in missing_list:
         match = get_close_matches(missing, full_list, n=3, cutoff=0.75)
-        print(f"MATCHES FOUND for {missing}: ", match)
+        # print(f"MATCHES FOUND for {missing}: ", match)
         if match:
 
             digits_only_missing = ''.join(filter(str.isdigit, missing))
@@ -146,6 +146,11 @@ def rtsedit(input_data, wrong_list, changes_list):
             print(edit_output)
             output_bool = re.search(r"\b" + re.escape('not found') + r"\b", edit_output, flags=re.IGNORECASE)
 
+            no_changes_bool = re.search(r"\b" + re.escape('No ROIs would be removed')
+                                        + r"\b", edit_output, flags=re.IGNORECASE)
+            if no_changes_bool:
+                copy_file(file, output_file)
+
             if not error_bool and not output_bool:
                 clean_edit = True
                 break
@@ -160,6 +165,11 @@ def rtsedit(input_data, wrong_list, changes_list):
 def move_file(filepath, filename):
     move_cmd = f"mv {filepath} modified/bad_edit/{filename}"
     move = subprocess.Popen(move_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def copy_file(filepath, filename):
+    copy_cmd = f"cp {filepath} modified/{filename}"
+    copy = subprocess.Popen(copy_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def save_summary(problems_dict, changes_list):
