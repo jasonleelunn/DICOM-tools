@@ -83,20 +83,20 @@ def rtsedit(input_data, wrong_list, changes_list):
     roi_info = "BLANK"
 
     anon_id = input_data[0]
-    wanted_labels = input_data[1:]
 
     edit_path = "etherj-cli-tools/bin/rtsedit"
 
     files = find_file(anon_id)
 
     for file in files:
+        include_rois = input_data[1:]
         found_labels, file_type_bool = get_roi_labels(file)
 
         if file_type_bool:
-            missing_labels = compare_labels(wanted_labels, found_labels, anon_id)
+            missing_labels = compare_labels(include_rois, found_labels, anon_id)
 
             if missing_labels:
-                include_rois = [e for e in wanted_labels if e not in missing_labels]
+                include_rois = [e for e in include_rois if e not in missing_labels]
 
                 converted_labels = label_conversion(missing_labels, found_labels, changes_list, anon_id)
                 include_rois += converted_labels
@@ -122,7 +122,7 @@ def rtsedit(input_data, wrong_list, changes_list):
             # if re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE):
             #     print("Error in rtsedit process;\n\n", edit_error)
             #     wrong_list.append([anon_id, "ERROR"])
-                # raise SystemExit
+            # raise SystemExit
             error_bool = re.search(r"\b" + re.escape('exception') + r"\b", edit_error, flags=re.IGNORECASE)
             edit_output = edit.stdout.read().decode('utf-8')
             print(edit_output)
