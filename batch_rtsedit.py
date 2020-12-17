@@ -148,8 +148,10 @@ def rtsedit(input_data, wrong_list, changes_list):
 
             no_changes_bool = re.search(r"\b" + re.escape('No ROIs would be removed')
                                         + r"\b", edit_output, flags=re.IGNORECASE)
+
             if no_changes_bool:
-                copy_file(file, output_file)
+                print("Copying file...")
+                copy_file(file, output_file_name)
 
             if not error_bool and not output_bool:
                 clean_edit = True
@@ -168,7 +170,7 @@ def move_file(filepath, filename):
 
 
 def copy_file(filepath, filename):
-    copy_cmd = f"cp {filepath} modified/{filename}"
+    copy_cmd = f"cp {filepath} {filename}"
     copy = subprocess.Popen(copy_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
