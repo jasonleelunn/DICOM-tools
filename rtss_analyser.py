@@ -38,7 +38,7 @@ def get_roi_labels(input_file):
     return labels
 
 
-rtss_folder = "rtss_test"
+rtss_folder = "extracted"
 patient_num = input("Enter anonymous ID number: ")
 patient_id = f"RS-5293-{patient_num}"
 files = find_file(patient_id)
