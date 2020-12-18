@@ -106,6 +106,7 @@ def rtsedit(input_data, wrong_list, changes_list):
 
     files = find_file(anon_id)
 
+    # add feature to look in all relevant files and split ROIs correctly
     for file in files:
         include_rois = input_data[1:]
         found_labels, file_type_bool = get_roi_labels(file)
@@ -151,7 +152,9 @@ def rtsedit(input_data, wrong_list, changes_list):
 
             if no_changes_bool:
                 print("Copying file...")
-                copy_file(file, output_file_name)
+                global copy_count
+                copy_count += 1
+                copy_file(file, output_file)
 
             if not error_bool and not output_bool:
                 clean_edit = True
@@ -205,10 +208,14 @@ def main():
         print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
         save_summary(wrong_list, changes_list)
 
+    if copy_count != 0:
+        print(f"Number of copied unedited files: {copy_count}")
+
     print("\nBatch rtsedit Complete!")
 
 
 if __name__ == "__main__":
     rtss_folder = input("Path to files: ")
     # rtss_folder = "rtss_test"
+    copy_count = 0
     main()

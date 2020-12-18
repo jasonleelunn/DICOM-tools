@@ -59,7 +59,7 @@ def copy_data(prearchive_path, info_dict, project_id):
                     now = now.replace(" ", "_")
                     new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
                     shutil.copy(filepath, new_location)
-                    anonymisation(script_path, new_location, anon_id, project_id)
+                    anonymisation(script_path, new_location, anon_id[11:], project_id)
 
 
 def file_info(timestamps_dict):

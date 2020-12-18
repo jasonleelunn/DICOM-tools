@@ -11,7 +11,3 @@ version "6.1"
 
 
 
-
-(0010,0010) := "RS-5293-111" // Anonymised Patient Name
-
-(0010,0020) := "RS-5293-111" // Anonymised Patient ID
