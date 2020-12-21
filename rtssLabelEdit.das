@@ -11,8 +11,8 @@ version "6.1"
 
 
 
-newLabel := format["MOD_{0}", (3006,0026)]
+newLabel := format["MOD_{0}", (3006,0004)]
 
-(3006,0026) := newLabel
+(3006,0004) := newLabel
 
 
