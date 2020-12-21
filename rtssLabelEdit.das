@@ -16,7 +16,3 @@ newLabel := format["MOD_{0}", (3006,0026)]
 (3006,0026) := newLabel
 
 
-
-(0008,0021) := "20201221" // Series Date
-
-(0008,0031) := "110828" // Series Time

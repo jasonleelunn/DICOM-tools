@@ -155,6 +155,7 @@ def rtsedit(input_data, wrong_list, changes_list):
                 global copy_count
                 copy_count += 1
                 copy_file(file, output_file)
+                label_edit(output_file)
 
             if not error_bool and not output_bool:
                 clean_edit = True
@@ -175,6 +176,41 @@ def move_file(filepath, filename):
 def copy_file(filepath, filename):
     copy_cmd = f"cp {filepath} {filename}"
     copy = subprocess.Popen(copy_cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def dot_das_insertion():
+    now = str(datetime.datetime.now())
+    date = now[:10].replace("-", "")
+    time = now[11:19].replace(":", "")
+
+    series_date = f"\n(0008,0021) := \"{date}\" // Series Date\n"
+    series_time = f"\n(0008,0031) := \"{time}\" // Series Time\n"
+
+    with open(script_path, 'r') as standard_script:
+        content = standard_script.read()
+
+    custom_script_path = "customised_script.das"
+    with open(custom_script_path, 'w') as custom_script:
+        custom_script.write(content)
+        custom_script.write(series_date)
+        custom_script.write(series_time)
+
+    return custom_script_path
+
+
+def label_edit(file_path):
+    custom_script_path = dot_das_insertion()
+
+    jar_path = "dicom-edit.jar"
+    run_jar = f"java -jar {jar_path}"
+
+    command = f"{run_jar} -s {custom_script_path} -i {file_path} -o {file_path}"
+    anon = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    jar_error = anon.stderr.read().decode('utf-8')
+
+    if re.search(r"\b" + re.escape('error') + r"\b", jar_error, flags=re.IGNORECASE):
+        print("Error in anonymisation;", jar_error)
+        raise SystemExit
 
 
 def save_summary(problems_dict, changes_list):
@@ -217,5 +253,6 @@ def main():
 if __name__ == "__main__":
     rtss_folder = input("Path to files: ")
     # rtss_folder = "rtss_test"
+    script_path = "rtssLabelEdit.das"
     copy_count = 0
     main()
