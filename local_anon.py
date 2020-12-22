@@ -78,6 +78,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # rtss_folder = input("Path to files: ")
-    rtss_folder = "modified/good/"
+    rtss_folder = input("Path to files: ")
+    # rtss_folder = "modified/good/"
     main()
