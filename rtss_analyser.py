@@ -39,19 +39,22 @@ def get_roi_labels(input_file):
 
 
 def main():
-    rtss_folder = "modified/500_ERROR"
+    rtss_folder = "rtss_test"
     patient_num = input("Enter anonymous ID number: ")
-    patient_id = f"RF-5293-{patient_num}"
+    patient_id = f"RS-5293-{patient_num}"
     files = find_file(patient_id, rtss_folder)
     for file in files:
-        ds = pydicom.read_file(file, force=True)
-        print(ds)
-        sequence = ds.StructureSetROISequence
-        print(sequence)
-        # number = thing.ReferencedROINumber
-        print("\n", file[22:33])
-        for seq in sequence:
-            print(seq.ROINumber, seq.ROIName)
+        label_list = get_roi_labels(file)
+        print(label_list)
+        if 'RTSTRUCT' in file.Modality:
+            ds = pydicom.read_file(file, force=True)
+            print(ds)
+            sequence = ds.StructureSetROISequence
+            print(sequence)
+            # number = thing.ReferencedROINumber
+            print("\n", file[22:33])
+            for seq in sequence:
+                print(seq.ROINumber, seq.ROIName)
 
 
 if __name__ == "__main__":
