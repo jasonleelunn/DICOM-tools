@@ -52,14 +52,14 @@ def user_pass_data(which_xnat):
     while not code == 200 or code == 403:
         u = input(f"Enter {which_xnat} XNAT Username: ")
         pw = input(f"Enter {which_xnat} XNAT Password: ")
-        check = requests.get(f'{dom}/xapi/access/displays', auth=(u, pw))
+        check = requests.get(f'{dom}', auth=(u, pw))
         code = check.status_code
         # print(code)
         if code == 200 or code == 403:
             print(f"Successful Login to {which_xnat} XNAT.")
         else:
             print("Could not verify credentials with XNAT. Please try again.")
-    return u, pw, dom
+    return dom, u, pw
 
 
 def download(domain, username, password, directory, project_id, subject):
