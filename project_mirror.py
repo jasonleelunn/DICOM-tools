@@ -62,10 +62,11 @@ def user_pass_data(which_xnat):
     return dom, u, pw
 
 
-def download(domain, username, password, directory, project_id, xnat_scan):
+def download(directory, xnat_scans, scan):
 
     # xnat_project = connection.projects[project_id]
     # xnat_subject = xnat_project.subjects[subject]
+    xnat_scan = xnat_scans[scan]
     xnat_scan.download_dir(directory, verbose=False)
     shutil.make_archive(directory, 'zip', directory)
 
@@ -109,7 +110,7 @@ def main():
                     for scan in xnat_scans:
                         temp_dir = Path("temp/")
                         with tempfile.TemporaryDirectory(dir=temp_dir, prefix="project_mirror_") as dir_path:
-                            download(source_dom, source_u, source_pw, dir_path, project_id, scan)
+                            download(dir_path, xnat_scans, scan)
                             upload(target_dom, target_u, target_pw, dir_path)
 
                 bar.next()
