@@ -71,11 +71,9 @@ def download(directory, xnat_scans, scan):
     shutil.make_archive(directory, 'zip', directory)
 
 
-def upload(domain, username, password, directory):
-    with requests.Session() as session:
-        session.auth = (username, password)
-        subject_upload = session.post(f'{domain}/data/services/import?inbody=true&import-handler=DICOM-zip'
-                                      f'&dest=/archive', data=open(f"{directory}.zip", 'rb'))
+def upload(domain, directory):
+    dest_session.post(f'{domain}/data/services/import?inbody=true&import-handler=DICOM-zip'
+                      f'&dest=/archive', data=open(f"{directory}.zip", 'rb'))
 
 
 class FancyBar(Bar):
@@ -100,6 +98,8 @@ def main():
             else:
                 break
 
+    dest_session.auth = (target_u, target_pw)
+
     with FancyBar('Copying Project...', max=len(xnat_subjects)) as bar:
         with xnat.connect(source_dom, user=source_u, password=source_pw) as connection:
             xnat_project = connection.projects[project_id]
@@ -111,10 +111,11 @@ def main():
                         temp_dir = Path("temp/")
                         with tempfile.TemporaryDirectory(dir=temp_dir, prefix="project_mirror_") as dir_path:
                             download(dir_path, xnat_scans, scan)
-                            upload(target_dom, target_u, target_pw, dir_path)
+                            upload(target_dom, dir_path)
 
                 bar.next()
 
 
 if __name__ == "__main__":
-    main()
+    with requests.Session() as dest_session:
+        main()
