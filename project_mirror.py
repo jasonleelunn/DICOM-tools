@@ -67,6 +67,7 @@ def download(domain, username, password, directory, project_id, subject):
         xnat_project = connection.projects[project_id]
         xnat_subject = xnat_project.subjects[subject]
         xnat_subject.download_dir(directory, verbose=False)
+        print("Subject Downloaded")
         shutil.make_archive(directory, 'zip', directory)
 
 
@@ -99,7 +100,7 @@ def main():
             else:
                 break
 
-    with FancyBar('Copying Project', max=len(xnat_subjects)) as bar:
+    with FancyBar('Copying Project...', max=len(xnat_subjects)) as bar:
         for patient in xnat_subjects:
             temp_dir = Path("temp/")
             with tempfile.TemporaryDirectory(dir=temp_dir, prefix="project_mirror_") as dir_path:
