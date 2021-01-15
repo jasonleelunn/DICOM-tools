@@ -62,13 +62,12 @@ def user_pass_data(which_xnat):
     return dom, u, pw
 
 
-def download(domain, username, password, directory, project_id, subject):
-    with xnat.connect(domain, user=username, password=password) as connection:
-        xnat_project = connection.projects[project_id]
-        xnat_subject = xnat_project.subjects[subject]
-        xnat_subject.download_dir(directory, verbose=False)
-        print("Subject Downloaded")
-        shutil.make_archive(directory, 'zip', directory)
+def download(domain, username, password, directory, project_id, xnat_scan):
+
+    # xnat_project = connection.projects[project_id]
+    # xnat_subject = xnat_project.subjects[subject]
+    xnat_scan.download_dir(directory, verbose=False)
+    shutil.make_archive(directory, 'zip', directory)
 
 
 def upload(domain, username, password, directory):
@@ -101,12 +100,19 @@ def main():
                 break
 
     with FancyBar('Copying Project...', max=len(xnat_subjects)) as bar:
-        for patient in xnat_subjects:
-            temp_dir = Path("temp/")
-            with tempfile.TemporaryDirectory(dir=temp_dir, prefix="project_mirror_") as dir_path:
-                download(source_dom, source_u, source_pw, dir_path, project_id, patient)
-                upload(target_dom, target_u, target_pw, dir_path)
-            bar.next()
+        with xnat.connect(source_dom, user=source_u, password=source_pw) as connection:
+            xnat_project = connection.projects[project_id]
+            for patient in xnat_subjects:
+                xnat_experiments = xnat_project.subjects[patient].experiments
+                for session in xnat_experiments:
+                    xnat_scans = xnat_project.subjects[patient].experiments[session].scans
+                    for scan in xnat_scans:
+                        temp_dir = Path("temp/")
+                        with tempfile.TemporaryDirectory(dir=temp_dir, prefix="project_mirror_") as dir_path:
+                            download(source_dom, source_u, source_pw, dir_path, project_id, scan)
+                            upload(target_dom, target_u, target_pw, dir_path)
+
+                bar.next()
 
 
 if __name__ == "__main__":
