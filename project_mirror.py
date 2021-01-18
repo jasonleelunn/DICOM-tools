@@ -73,7 +73,7 @@ def download(directory, xnat_scans, scan):
 
 
 def upload(domain, directory):
-    time.sleep(2)
+    time.sleep(5)
     dest_session.post(f'{domain}/data/services/import?inbody=true&import-handler=DICOM-zip'
                       f'&dest=/archive', data=open(f"{directory}.zip", 'rb'))
 
