@@ -12,6 +12,7 @@ from pathlib import Path
 import requests
 import xnat
 from progress.bar import Bar
+import time
 
 
 @contextmanager
@@ -72,6 +73,7 @@ def download(directory, xnat_scans, scan):
 
 
 def upload(domain, directory):
+    time.sleep(2)
     dest_session.post(f'{domain}/data/services/import?inbody=true&import-handler=DICOM-zip'
                       f'&dest=/archive', data=open(f"{directory}.zip", 'rb'))
 
