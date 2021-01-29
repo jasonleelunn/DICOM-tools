@@ -111,6 +111,12 @@ def rtsedit(input_data, wrong_list, changes_list):
         include_rois = input_data[1:]
         found_labels, file_type_bool = get_roi_labels(file)
 
+        requested_ctv_check = [roi for roi in include_rois if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+        present_ctv_check = [roi for roi in found_labels if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+
+        if present_ctv_check and not requested_ctv_check:
+            include_rois.extend(present_ctv_check)
+
         if file_type_bool:
             missing_labels = compare_labels(include_rois, found_labels, anon_id)
 
@@ -126,14 +132,14 @@ def rtsedit(input_data, wrong_list, changes_list):
             now = now.replace(":", "_")
             now = now.replace(" ", "_")
 
-            output_file_name = "MOD_" + anon_id + "_" + now + ".dcm"
+            output_file_name = "ALT_" + anon_id + "_" + now + ".dcm"
             output_file = "modified/" + output_file_name
 
             joint = '\" \"'
             rois = re.split('(?<![a-zA-Z0-9-%]) ', f"\"{joint.join(include_rois)}\"")
 
             # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
-            command_list = [edit_path, "--label", "MOD_+", "--include", *rois, "--output", output_file, file]
+            command_list = [edit_path, "--label", "ALT_+", "--include", *rois, "--output", output_file, file]
 
             edit = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
