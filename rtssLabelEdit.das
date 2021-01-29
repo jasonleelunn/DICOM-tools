@@ -11,7 +11,7 @@ version "6.1"
 
 
 
-newLabel := format["MOD_{0}", (3006,0002)]
+newLabel := "ALT_single_ROI"
 
 (3006,0002) := newLabel
 
