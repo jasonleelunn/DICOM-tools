@@ -40,7 +40,8 @@ def get_roi_labels(input_file):
 
 
 def main():
-    rtss_folder = "rtss_test"
+    # rtss_folder = "rtss_test"
+    rtss_folder = "extracted/Batch2_full"
     patient_num = input("Enter anonymous ID number: ")
     patient_id = f"RS-5293-{patient_num}"
     files = find_file(patient_id, rtss_folder)
@@ -58,14 +59,14 @@ def main():
                 if seq.ReferencedROINumber:
                     try:
                         contour = seq.ContourSequence
+                    except AttributeError as e:
                         num = seq.ReferencedROINumber
                         roi_name = seq.ReferencedROILabel
-                        print(roi_name)
-                    except AttributeError as e:
+                        print(f"{roi_name} is empty")
                         print(e)
 
             # number = thing.ReferencedROINumber
-            print("\n", file[22:33])
+            # print("\n", file[22:33])
             for seq in info_sequence:
                 print(seq.ROINumber, seq.ROIName)
 
