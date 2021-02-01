@@ -177,7 +177,7 @@ def rtsedit(input_data, wrong_list, changes_list, empty_list):
             rois = re.split('(?<![a-zA-Z0-9-%]) ', f"\"{joint.join(include_rois)}\"")
 
             # command = f"{edit_path} --label MOD_+ --include \"{joint.join(include_rois)}\" --output {output_file} {file}"
-            command_list = [edit_path, "--label", "ALT_+", "--include", *rois, "--output", output_file, file]
+            command_list = [edit_path, "--label", "ALT_RTSS", "--include", *rois, "--output", output_file, file]
 
             edit = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
