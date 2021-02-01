@@ -47,28 +47,28 @@ def main():
     files = find_file(patient_id, rtss_folder)
     for file in files:
         label_list, modality = get_roi_labels(file)
-        print(label_list)
         if 'RTSTRUCT' in modality:
+            print(label_list)
             ds = pydicom.read_file(file, force=True)
             # print(ds)
-            info_sequence = ds.StructureSetROISequence
-            # print(info_sequence)
-
-            contour_sequence = ds.ROIContourSequence
-            for seq in contour_sequence:
-                if seq.ReferencedROINumber:
-                    try:
-                        contour = seq.ContourSequence
-                    except AttributeError as e:
-                        num = seq.ReferencedROINumber
-                        roi_name = seq.ReferencedROILabel
-                        print(f"{roi_name} is empty")
-                        print(e)
+            # info_sequence = ds.StructureSetROISequence
+            # for seq in info_sequence:
+            #     roi_dict[seq.ROINumber] = seq.ROIName
+            #
+            # contour_sequence = ds.ROIContourSequence
+            # for seq in contour_sequence:
+            #     if seq.ReferencedROINumber:
+            #         try:
+            #             contour = seq.ContourSequence
+            #         except AttributeError as e:
+            #             num = seq.ReferencedROINumber
+            #             print(f"{roi_name} is empty")
+            #             print(e)
 
             # number = thing.ReferencedROINumber
             # print("\n", file[22:33])
-            for seq in info_sequence:
-                print(seq.ROINumber, seq.ROIName)
+            # for seq in info_sequence:
+            #     print(seq.ROINumber, seq.ROIName)
 
 
 if __name__ == "__main__":
