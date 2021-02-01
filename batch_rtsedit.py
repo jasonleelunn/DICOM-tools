@@ -11,6 +11,7 @@ import os
 import subprocess
 import datetime
 import pydicom
+import argparse
 from tkinter.filedialog import askopenfilename
 from difflib import get_close_matches
 
@@ -49,6 +50,31 @@ def get_roi_labels(filename):
         # raise Exception(msg)
 
     return labels, file_type_check
+
+
+def empty_roi_check(filename):
+    file = pydicom.read_file(filename, force=True)
+
+    empty_roi_list = []
+    roi_dict = {}
+
+    if 'RTSTRUCT' in file.Modality:
+
+        info_sequence = file.StructureSetROISequence
+        for seq in info_sequence:
+            roi_dict[seq.ROINumber] = seq.ROIName
+
+        contour_sequence = file.ROIContourSequence
+        for seq in contour_sequence:
+            try:
+                contour_metadata = seq.ContourSequence
+            except AttributeError as e:
+                # print(e)
+                roi_number_contour = seq.ReferencedROINumber
+                roi_name = roi_dict[roi_number_contour]
+                empty_roi_list.append(roi_name)
+
+    return empty_roi_list
 
 
 def compare_labels(requested_labels, all_labels, patient_id):
@@ -96,7 +122,7 @@ def label_conversion(missing_list, full_list, changes, anon_id):
     return matches
 
 
-def rtsedit(input_data, wrong_list, changes_list):
+def rtsedit(input_data, wrong_list, changes_list, empty_list):
     clean_edit = False
     roi_info = "BLANK"
 
@@ -110,14 +136,21 @@ def rtsedit(input_data, wrong_list, changes_list):
     for file in files:
         include_rois = input_data[1:]
         found_labels, file_type_bool = get_roi_labels(file)
+        empty_labels = empty_roi_check(file)
 
-        requested_ctv_check = [roi for roi in include_rois if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
-        present_ctv_check = [roi for roi in found_labels if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+        if args.ctv:
+            requested_ctv_check = [roi for roi in include_rois if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+            present_ctv_check = [roi for roi in found_labels if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
 
-        if present_ctv_check and not requested_ctv_check:
-            include_rois.extend(present_ctv_check)
+            if present_ctv_check and not requested_ctv_check:
+                include_rois.extend(present_ctv_check)
 
         if file_type_bool:
+
+            if empty_labels:
+                found_labels = [e for e in found_labels if e not in empty_labels]
+                empty_list[anon_id] = empty_labels
+
             missing_labels = compare_labels(include_rois, found_labels, anon_id)
 
             if missing_labels:
@@ -126,6 +159,8 @@ def rtsedit(input_data, wrong_list, changes_list):
                 converted_labels = label_conversion(missing_labels, found_labels, changes_list, anon_id)
                 include_rois += converted_labels
                 # print(f"UPDATED LABELS for {anon_id}: ", include_rois)
+
+
 
             # continue
             now = str(datetime.datetime.now())
@@ -156,7 +191,7 @@ def rtsedit(input_data, wrong_list, changes_list):
             no_changes_bool = re.search(r"\b" + re.escape('No ROIs would be removed')
                                         + r"\b", edit_output, flags=re.IGNORECASE)
 
-            if no_changes_bool:
+            if no_changes_bool and args.changes:
                 print("Copying file...")
                 global copy_count
                 copy_count += 1
@@ -219,7 +254,7 @@ def label_edit(file_path):
         raise SystemExit
 
 
-def save_summary(problems_dict, changes_list):
+def save_summary(problems_dict, changes_list, empty_dict):
     now = str(datetime.datetime.now())
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -232,23 +267,42 @@ def save_summary(problems_dict, changes_list):
         write = csv.writer(file, delimiter=',')
         write.writerows(changes_list)
 
+    with open(f"modified/error_logs/{now}_batch_rtsedit_empty_rois.txt", 'w', newline='') as f:
+        json.dump(empty_dict, f, sort_keys=True, indent=0)
+
+
+def cli_args():
+    parser = argparse.ArgumentParser(
+        description="A program to automate the editing of ROI's in DICOM Radiotherapy Structure files.")
+
+    parser.add_argument("-c", "--ctv",
+                        help="enable CTV ROI addition", default=False, action='store_true')
+
+    parser.add_argument("-n", "--changes",
+                        help="enable copying unchanged files", default=False, action='store_true')
+
+    args_int = parser.parse_args()
+    return args_int
+
 
 def main():
     data_list = read_input_file()
     count = 0
     wrong_list = {}
     changes_list = []
+    empty_list = {}
 
     for data in data_list:
         count += 1
         print(f"\nEditing RTSTRUCT for patient {data[0]} ({count}/{len(data_list)})")
-        rtsedit(data, wrong_list, changes_list)
+        rtsedit(data, wrong_list, changes_list, empty_list)
 
     if wrong_list:
         print(f"Patients for which files were not edited correctly;")
         print(*wrong_list.keys(), sep='\n')
         print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
-        save_summary(wrong_list, changes_list)
+
+    save_summary(wrong_list, changes_list, empty_list)
 
     if copy_count != 0:
         print(f"Number of copied unedited files: {copy_count}")
@@ -257,6 +311,7 @@ def main():
 
 
 if __name__ == "__main__":
+    args = cli_args()
     rtss_folder = input("Path to files: ")
     # rtss_folder = "rtss_test"
     script_path = "rtssLabelEdit.das"

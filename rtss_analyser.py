@@ -24,8 +24,9 @@ def find_file(anon_id, folder):
 def get_roi_labels(input_file):
     labels = []
     file = pydicom.read_file(input_file, force=True)
+    modality = file.Modality
 
-    if 'RTSTRUCT' in file.Modality:
+    if 'RTSTRUCT' in modality:
         sequences = file.StructureSetROISequence
 
         for sequence in sequences:
@@ -35,7 +36,7 @@ def get_roi_labels(input_file):
         msg = "The file object is not recognised as being RTS or SEG."
         # raise Exception(msg)
 
-    return labels
+    return labels, modality
 
 
 def main():
@@ -44,16 +45,28 @@ def main():
     patient_id = f"RS-5293-{patient_num}"
     files = find_file(patient_id, rtss_folder)
     for file in files:
-        label_list = get_roi_labels(file)
+        label_list, modality = get_roi_labels(file)
         print(label_list)
-        if 'RTSTRUCT' in file.Modality:
+        if 'RTSTRUCT' in modality:
             ds = pydicom.read_file(file, force=True)
-            print(ds)
-            sequence = ds.StructureSetROISequence
-            print(sequence)
+            # print(ds)
+            info_sequence = ds.StructureSetROISequence
+            # print(info_sequence)
+
+            contour_sequence = ds.ROIContourSequence
+            for seq in contour_sequence:
+                if seq.ReferencedROINumber:
+                    try:
+                        contour = seq.ContourSequence
+                        num = seq.ReferencedROINumber
+                        roi_name = seq.ReferencedROILabel
+                        print(roi_name)
+                    except AttributeError as e:
+                        print(e)
+
             # number = thing.ReferencedROINumber
             print("\n", file[22:33])
-            for seq in sequence:
+            for seq in info_sequence:
                 print(seq.ROINumber, seq.ROIName)
 
 
