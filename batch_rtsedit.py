@@ -147,9 +147,9 @@ def rtsedit(input_data, wrong_list, changes_list, empty_list):
 
         if file_type_bool:
 
-            if empty_labels:
-                found_labels = [e for e in found_labels if e not in empty_labels]
-                empty_list[anon_id] = empty_labels
+            # if empty_labels:
+            #     found_labels = [e for e in found_labels if e not in empty_labels]
+            #     empty_list[anon_id] = empty_labels
 
             missing_labels = compare_labels(include_rois, found_labels, anon_id)
 
@@ -160,6 +160,9 @@ def rtsedit(input_data, wrong_list, changes_list, empty_list):
                 include_rois += converted_labels
                 # print(f"UPDATED LABELS for {anon_id}: ", include_rois)
 
+            if empty_labels:
+                include_rois = [e for e in include_rois if e not in empty_labels]
+                empty_list[anon_id] = empty_labels
 
 
             # continue
