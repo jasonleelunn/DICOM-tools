@@ -101,7 +101,8 @@ class App:
                 pass
 
             burnt_tag_check = re.search(re.escape("YES"), burned_in_annotation_tag, flags=re.IGNORECASE)
-            if self.secondary_capture_uid in uid_info or self.presentation_state_uid in uid_info or burnt_tag_check:
+            if self.secondary_capture_uid in uid_info or burnt_tag_check:
+                # or self.presentation_state_uid in uid_info
                 self.scan_location_info(scan_data, uid_info, burned_in_annotation_tag)
 
     def scan_location_info(self, scan_data, uid_info, burned_tag_contents):
