@@ -90,6 +90,9 @@ class App:
             self.non_dicom_log(scan_data, e)
         except pydicom.errors.InvalidDicomError as e:
             self.non_dicom_log(scan_data, e)
+        except IndexError as e:
+            # issue with mixin package in XNATpy
+            self.non_dicom_log(scan_data, e)
 
         else:
             sop_class_uid_tag = dicom_header['00080016'].value
