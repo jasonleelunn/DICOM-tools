@@ -32,22 +32,32 @@ def user_pass_data(which_xnat):
 
 
 class FancyBar(ChargingBar):
-    message = 'Scanning'
+    message = 'Removing Data'
     fill = '#'
     suffix = '%(percent).1f%% - Estimated Time Remaining: %(eta)ds'
 
 
-def api_delete_call():
-    pass
+class App:
+    def __init__(self, session, domain):
+        self.session = session
+        self.domain = domain
+
+    def api_delete_call(self, experiment_id, scan_id):
+        self.session.delete(f"{self.domain}/data/experiments/{experiment_id}/scans/{scan_id}")
 
 
 def main():
-    app = App()
+    domain, username, password = user_pass_data("Target")
+
+    with requests.Session() as session:
+        session.auth = (f'{username}', f'{password}')
+        app = App(session, domain=domain)
 
     start = time.time()
-    app.xnat_loop()
+    # app.xnat_loop()
     end = time.time()
     elapsed = round(end - start, 1)
+    print(f"Ran in {elapsed} seconds\n")
 
 
 if __name__ == "__main__":
