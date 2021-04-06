@@ -4,13 +4,14 @@
 
 import requests
 from tkinter.filedialog import asksaveasfilename
+import getpass
 
 
 def get_login_details():
 
     domain = input(f"Enter XNAT Domain: ")
     username = input(f"Enter Username for {domain}: ")
-    password = input(f"Enter Password for {username}@{domain}: ")
+    password = getpass.getpass(prompt=f"Enter Password for {username}@{domain}: ")
 
     return domain, username, password
 
@@ -60,11 +61,11 @@ def main():
                                 f'/subjects/{patient}/experiments',
                                 auth=(u, pw), verify=not False)
         sessions_json = sessions.json()
-        [sessions_label_dic.append((sesh['label'], patient)) for sesh in sessions_json['ResultSet']['Result']]
+        [sessions_label_dic.append((sesh['ID'], patient)) for sesh in sessions_json['ResultSet']['Result']]
 
-    edited_dic = session_edit(sessions_label_dic)
-    print(f"Number of sessions found: {len(edited_dic)}")
-    save_output(edited_dic)
+    # sessions_label_dic = session_edit(sessions_label_dic)
+    print(f"Number of sessions found: {len(sessions_label_dic)}")
+    save_output(sessions_label_dic)
 
 
 if __name__ == "__main__":
