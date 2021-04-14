@@ -201,7 +201,7 @@ def append_to_output_file(output_filename, subject_name, roi_label, seg_data, fr
         dict_writer.writerow(output_contents)
 
 
-def main():
+def download_from_xnat():
     domain, username, password = get_login_details()
     project_id = input("Enter target project ID: ")
 
@@ -220,6 +220,17 @@ def main():
                 roi_label = get_roi_label(xnat_session, domain, seg)
                 append_to_output_file(output_filename, subject_name, roi_label,
                                       seg, frame_volume_dict, total_volume, voxel_dimensions)
+
+
+def local_file_test():
+    testfile = Path("data")
+    seg = read_seg(testfile)
+    frame_volumes, total_volume, voxel_dims = find_volume(seg)
+
+
+def main():
+    download_from_xnat()
+    # local_file_test()
 
 
 if __name__ == "__main__":
