@@ -14,12 +14,13 @@ import csv
 import re
 import requests
 from tkinter.filedialog import askopenfilename
+import getpass
 
 
 def get_login_details():
     domain = input(f"Enter XNAT Domain: ")
     username = input(f"Enter Username for {domain}: ")
-    password = input(f"Enter Password for {username}@{domain}: ")
+    password = getpass.getpass(f"Enter Password for {username}@{domain}: ")
 
     return domain, username, password
 
@@ -48,6 +49,7 @@ def copy_data(prearchive_path, info_dict, project_id):
     # print(info_dict)
     for anon_id, timestamp in info_dict.items():
         # anon_id = anon_id[11:]
+        print(anon_id[11:])
 
         for root, dirs, files in os.walk(prearchive_path + timestamp):
             for file in files:
@@ -81,11 +83,11 @@ def anon_insertion(anon_name, project_id, script_path):
     # (0010,0010) DICOM tag
     new_name = f"\n(0010,0010) := \"{anon_name}\" // Anonymised Patient Name\n"
     # (0010,0020) DICOM tag
-    # new_id = f"\n(0010,0020) := \"{anon_id}\" // Anonymised Patient ID\n"
+    new_id = f"\n(0010,0020) := \"{anon_name}\" // Anonymised Patient ID\n"
 
     # study_desc = f"\n(0008,1030) := \"{project_id}\" // Study Description\n"
     project_line = f"\nproject := \"{project_id}\"\n"
-    session = "\nsession := format[\"{0}_{1}{2}\", scanDate2, scanTime2, scannerName2]\n"
+    session = "\nsession := format[\"{0}_{1}_{2}\", scanDate2, scanTime2, scannerName2]\n"
     patient_comments = f"\n(0010,4000) := format[\"Project: {project_id}; " + \
                        f"Subject: {anon_name}; " \
                        "Session: {0}; " + \
@@ -99,7 +101,7 @@ def anon_insertion(anon_name, project_id, script_path):
     with open(custom_script_path, 'w') as custom_script:
         custom_script.write(content)
         custom_script.write(new_name)
-        # custom_script.write(new_id)
+        custom_script.write(new_id)
         custom_script.write(project_line)
         custom_script.write(session)
         # custom_script.write(study_desc)
@@ -132,7 +134,8 @@ def main():
     # print("session: timestamp", prearchive_dictionary)
     # print("session: anon_id", wanted_list)
 
-    matched_dict = {wanted_list[k]+f"_f{it}": prearchive_dictionary[k] for it, k in enumerate(prearchive_dictionary.keys() & wanted_list.keys())}
+    matched_dict = {wanted_list[k]+f"_f{it}": prearchive_dictionary[k] for it, k in
+                    enumerate(prearchive_dictionary.keys() & wanted_list.keys())}
 
     prearchive_path = file_info(matched_dict)
 
