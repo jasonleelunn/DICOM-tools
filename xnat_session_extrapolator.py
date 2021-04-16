@@ -57,16 +57,23 @@ def save_output(lines):
         print(f"File Created!\nFile is located at '{filename}'")
 
 
+def ask_session_modality():
+    modality_input = input("Modality of session: ")
+    modality = modality_input.lower()
+
+    return modality
+
+
 def main(session):
     dom, u, pw = get_login_details()
     project, patient_list = get_patient_list(session, dom, u, pw)
-    modality = input("Modality of session: ")
+    modality = ask_session_modality()
 
     sessions_label_dic = []
     for patient in patient_list:
         if modality:
             sessions = session.get(f'{dom}/data/projects/{project}'
-                                    f'/subjects/{patient}/experiments?modality={modality}',
+                                    f'/subjects/{patient}/experiments?xsiType=xnat:{modality}SessionData',
                                     auth=(u, pw), verify=False)
         else:
             sessions = session.get(f'{dom}/data/projects/{project}'
