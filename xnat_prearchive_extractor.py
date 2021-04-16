@@ -47,9 +47,9 @@ def read_session_file():
 def copy_data(prearchive_path, info_dict, project_id):
     script_path = askopenfilename(title="Choose an anonymisation profile")
     # print(info_dict)
-    for anon_id, timestamp in info_dict.items():
+    for count, anon_id, timestamp in enumerate(info_dict.items()):
         # anon_id = anon_id[11:]
-        print(anon_id[11:])
+        # print(anon_id[:-4])
 
         for root, dirs, files in os.walk(prearchive_path + timestamp):
             for file in files:
@@ -59,9 +59,9 @@ def copy_data(prearchive_path, info_dict, project_id):
                     now = str(datetime.datetime.now())
                     now = now.replace(":", "_")
                     now = now.replace(" ", "_")
-                    new_location = f"extracted/{anon_id}_" + str(now) + ".dcm"
+                    new_location = f"extracted/{anon_id}_file{count}_" + str(now) + ".dcm"
                     shutil.copy(filepath, new_location)
-                    anonymisation(script_path, new_location, anon_id[11:], project_id)
+                    anonymisation(script_path, new_location, anon_id, project_id)
 
 
 def file_info(timestamps_dict):
@@ -134,7 +134,7 @@ def main():
     # print("session: timestamp", prearchive_dictionary)
     # print("session: anon_id", wanted_list)
 
-    matched_dict = {wanted_list[k]+f"_f{it}": prearchive_dictionary[k] for it, k in
+    matched_dict = {wanted_list[k]: prearchive_dictionary[k] for it, k in
                     enumerate(prearchive_dictionary.keys() & wanted_list.keys())}
 
     prearchive_path = file_info(matched_dict)
