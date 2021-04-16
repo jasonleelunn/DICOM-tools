@@ -15,11 +15,17 @@ import re
 import requests
 from tkinter.filedialog import askopenfilename
 import getpass
+import json
 
 
 def get_login_details():
-    domain = input(f"Enter XNAT Domain: ")
-    username = input(f"Enter Username for {domain}: ")
+
+    with open("login_details.json", 'r') as details_file:
+        details = json.load(details_file)
+    domain = details['domain']
+    username = details['username']
+    # domain = input(f"Enter XNAT Domain: ")
+    # username = input(f"Enter Username for {domain}: ")
     password = getpass.getpass(f"Enter Password for {username}@{domain}: ")
 
     return domain, username, password
@@ -47,7 +53,7 @@ def read_session_file():
 def copy_data(prearchive_path, info_dict, project_id):
     script_path = askopenfilename(title="Choose an anonymisation profile")
     # print(info_dict)
-    for count, anon_id, timestamp in enumerate(info_dict.items()):
+    for count, (anon_id, timestamp) in enumerate(info_dict.items()):
         # anon_id = anon_id[11:]
         # print(anon_id[:-4])
 
@@ -68,7 +74,12 @@ def file_info(timestamps_dict):
     num_files = len(timestamps_dict)
     print("Total number of files found in prearchive: ", num_files)
     bytes_total = 0
-    pre_path = input("Absolute path to prearchive data: ")
+
+    with open("login_details.json", 'r') as details_file:
+        details = json.load(details_file)
+    pre_path = details['prearchive_path']
+    # pre_path = input("Absolute path to prearchive data: ")
+
     for folder in timestamps_dict.values():
         for root, dirs, files in os.walk(pre_path + folder):
             for file in files:
@@ -126,8 +137,9 @@ def anonymisation(script_path, file_path, anon_id, project_id):
 
 
 def main():
-    project = input(f"Enter Project ID: ")
-    # project = "Unassigned"
+    # project = input(f"Enter Project ID: ")
+    project = "RPYS_RPACS01"
+
     dom, u, pw = get_login_details()
     wanted_list = read_session_file()
     prearchive_dictionary = get_xnat_session_list(dom, u, pw, project)
