@@ -5,21 +5,27 @@
 import requests
 from tkinter.filedialog import asksaveasfilename
 import getpass
+import json
 
 
 def get_login_details():
 
-    domain = input(f"Enter XNAT Domain: ")
-    username = input(f"Enter Username for {domain}: ")
+    with open("login_details.json", 'r') as details_file:
+        details = json.load(details_file)
+
+    domain = details['domain']
+    # domain = input(f"Enter XNAT Domain: ")
+    username = details['username']
+    # username = input(f"Enter Username for {domain}: ")
     password = getpass.getpass(prompt=f"Enter Password for {username}@{domain}: ")
 
     return domain, username, password
 
 
-def get_patient_list(domain, user, pw):
+def get_patient_list(session, domain, user, pw):
 
     project = input(f"Enter Project ID: ")
-    patients = requests.get(f'{domain}/data/projects/{project}/subjects',
+    patients = session.get(f'{domain}/data/projects/{project}/subjects',
                             auth=(user, pw), verify=False)
     patient_json = patients.json()
     patient_label_list = []
@@ -51,17 +57,23 @@ def save_output(lines):
         print(f"File Created!\nFile is located at '{filename}'")
 
 
-def main():
+def main(session):
     dom, u, pw = get_login_details()
-    project, patient_list = get_patient_list(dom, u, pw)
+    project, patient_list = get_patient_list(session, dom, u, pw)
+    modality = input("Modality of session: ")
 
     sessions_label_dic = []
     for patient in patient_list:
-        sessions = requests.get(f'{dom}/data/projects/{project}'
-                                f'/subjects/{patient}/experiments',
-                                auth=(u, pw), verify=not False)
+        if modality:
+            sessions = session.get(f'{dom}/data/projects/{project}'
+                                    f'/subjects/{patient}/experiments?modality={modality}',
+                                    auth=(u, pw), verify=False)
+        else:
+            sessions = session.get(f'{dom}/data/projects/{project}'
+                                   f'/subjects/{patient}/experiments',
+                                   auth=(u, pw), verify=False)
         sessions_json = sessions.json()
-        [sessions_label_dic.append((sesh['ID'], patient)) for sesh in sessions_json['ResultSet']['Result']]
+        [sessions_label_dic.append((sesh['label'], patient)) for sesh in sessions_json['ResultSet']['Result']]
 
     # sessions_label_dic = session_edit(sessions_label_dic)
     print(f"Number of sessions found: {len(sessions_label_dic)}")
@@ -69,4 +81,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    with requests.Session() as requests_session:
+        main(requests_session)
