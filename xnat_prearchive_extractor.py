@@ -65,9 +65,9 @@ def copy_data(prearchive_path, info_dict, project_id, number_of_files):
         for count, (anon_id, timestamp) in enumerate(info_dict.items()):
             for root, dirs, files in os.walk(prearchive_path + timestamp):
                 for file in files:
-                    correct_modality = file_modality_check(file)
+                    filepath = os.path.join(root, file)
+                    correct_modality = file_modality_check(filepath)
                     if file.endswith(".dcm") and correct_modality:
-                        filepath = os.path.join(root, file)
 
                         now = str(datetime.datetime.now())
                         now = now.replace(":", "_")
