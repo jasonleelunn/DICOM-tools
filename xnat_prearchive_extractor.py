@@ -17,6 +17,7 @@ from tkinter.filedialog import askopenfilename
 import getpass
 import json
 from progress.bar import Bar
+import pydicom
 
 
 class FancyBar(Bar):
@@ -65,7 +66,8 @@ def copy_data(prearchive_path, info_dict, project_id, number_of_files):
             print(anon_id, timestamp)
             for root, dirs, files in os.walk(prearchive_path + timestamp):
                 for file in files:
-                    if file.endswith(".dcm"):
+                    correct_modality = file_modality_check(file)
+                    if file.endswith(".dcm") and correct_modality:
                         filepath = os.path.join(root, file)
 
                         now = str(datetime.datetime.now())
@@ -75,6 +77,20 @@ def copy_data(prearchive_path, info_dict, project_id, number_of_files):
                         shutil.copy(filepath, new_location)
                         anonymisation(script_path, new_location, anon_id, project_id)
             bar.next()
+
+
+def file_modality_check(filepath):
+    rtss_uid = "1.2.840.10008.5.1.4.1.1.481"
+    file_bool = False
+
+    try:
+        dcm_dataset = pydicom.read_file(filepath)
+        sop_class_uid_tag = dcm_dataset['00080016'].value
+        file_bool = rtss_uid in str(sop_class_uid_tag)
+    except Exception as e:
+        pass
+
+    return file_bool
 
 
 def file_info(timestamps_dict):
