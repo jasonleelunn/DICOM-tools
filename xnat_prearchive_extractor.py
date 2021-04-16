@@ -63,7 +63,6 @@ def copy_data(prearchive_path, info_dict, project_id, number_of_files):
 
     with FancyBar('Extracting data from prearchive... ', max=number_of_files) as bar:
         for count, (anon_id, timestamp) in enumerate(info_dict.items()):
-            print(anon_id, timestamp)
             for root, dirs, files in os.walk(prearchive_path + timestamp):
                 for file in files:
                     correct_modality = file_modality_check(file)
