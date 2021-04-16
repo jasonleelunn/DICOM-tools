@@ -16,6 +16,13 @@ import requests
 from tkinter.filedialog import askopenfilename
 import getpass
 import json
+from progress.bar import Bar
+
+
+class FancyBar(Bar):
+    # message = 'Loading'
+    # fill = '*'
+    suffix = '%(percent).2f%% - %(eta)ds'
 
 
 def get_login_details():
@@ -50,24 +57,24 @@ def read_session_file():
     return wanted_list
 
 
-def copy_data(prearchive_path, info_dict, project_id):
+def copy_data(prearchive_path, info_dict, project_id, number_of_files):
     script_path = askopenfilename(title="Choose an anonymisation profile")
-    # print(info_dict)
-    for count, (anon_id, timestamp) in enumerate(info_dict.items()):
-        # anon_id = anon_id[11:]
-        # print(anon_id[:-4])
 
-        for root, dirs, files in os.walk(prearchive_path + timestamp):
-            for file in files:
-                if file.endswith(".dcm"):
-                    filepath = os.path.join(root, file)
+    with FancyBar('Extracting data from prearchive... ', max=number_of_files) as bar:
+        for count, (anon_id, timestamp) in enumerate(info_dict.items()):
+            print(anon_id, timestamp)
+            for root, dirs, files in os.walk(prearchive_path + timestamp):
+                for file in files:
+                    if file.endswith(".dcm"):
+                        filepath = os.path.join(root, file)
 
-                    now = str(datetime.datetime.now())
-                    now = now.replace(":", "_")
-                    now = now.replace(" ", "_")
-                    new_location = f"extracted/{anon_id}_file{count}_" + str(now) + ".dcm"
-                    shutil.copy(filepath, new_location)
-                    anonymisation(script_path, new_location, anon_id, project_id)
+                        now = str(datetime.datetime.now())
+                        now = now.replace(":", "_")
+                        now = now.replace(" ", "_")
+                        new_location = f"extracted/{anon_id}_file{count}_" + str(now) + ".dcm"
+                        shutil.copy(filepath, new_location)
+                        anonymisation(script_path, new_location, anon_id, project_id)
+            bar.next()
 
 
 def file_info(timestamps_dict):
@@ -87,7 +94,7 @@ def file_info(timestamps_dict):
                     filepath = os.path.join(root, file)
                     bytes_total += os.stat(filepath).st_size
     print(f"Total size of data found: {bytes_total/1000**3}GB")
-    return pre_path
+    return pre_path, num_files
 
 
 def anon_insertion(anon_name, project_id, script_path):
@@ -149,11 +156,11 @@ def main():
     matched_dict = {wanted_list[k]: prearchive_dictionary[k] for it, k in
                     enumerate(prearchive_dictionary.keys() & wanted_list.keys())}
 
-    prearchive_path = file_info(matched_dict)
+    prearchive_path, number_of_files = file_info(matched_dict)
 
     continue_check = input("Continue? [y/N]: ")
     if continue_check == "y":
-        copy_data(prearchive_path, matched_dict, project)
+        copy_data(prearchive_path, matched_dict, project, number_of_files)
 
 
 if __name__ == "__main__":
