@@ -64,15 +64,15 @@ def copy_data(prearchive_path, info_dict, project_id, number_of_files):
     with FancyBar('Extracting data from prearchive... ', max=number_of_files) as bar:
         for count, (anon_id, timestamp) in enumerate(info_dict.items()):
             for root, dirs, files in os.walk(prearchive_path + timestamp):
-                for file in files:
+                for file_count, file in enumerate(files):
                     filepath = os.path.join(root, file)
                     correct_modality = file_modality_check(filepath)
                     if file.endswith(".dcm") and correct_modality:
 
-                        now = str(datetime.datetime.now())
-                        now = now.replace(":", "_")
-                        now = now.replace(" ", "_")
-                        new_location = f"extracted/{anon_id}_file{count}_" + str(now) + ".dcm"
+                        # now = str(datetime.datetime.now())
+                        # now = now.replace(":", "_")
+                        # now = now.replace(" ", "_")
+                        new_location = f"extracted/{anon_id}_file{file_count}_{timestamp}.dcm"
                         shutil.copy(filepath, new_location)
                         anonymisation(script_path, new_location, anon_id, project_id)
             bar.next()
