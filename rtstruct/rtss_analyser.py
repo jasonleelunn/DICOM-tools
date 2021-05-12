@@ -41,7 +41,7 @@ def get_roi_labels(input_file):
 
 def main():
     # rtss_folder = "rtss_test"
-    rtss_folder = "extracted/Batch2_full"
+    rtss_folder = input("Path to rtss files: ")
     patient_num = input("Enter anonymous ID number: ")
     patient_id = f"RS-5293-{patient_num}"
     files = find_file(patient_id, rtss_folder)
