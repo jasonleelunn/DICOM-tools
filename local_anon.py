@@ -70,14 +70,14 @@ def anonymisation(script_path, file_path, anon_id):
 def main():
     filepaths = find_files()
     script_path = askopenfilename(title="Choose an anonymisation profile")
+    example_id = input("Enter example anon ID: ")
 
     for file in filepaths:
-        anon_id = file[len(rtss_folder)+4:len(rtss_folder)+15]
+        anon_id = file[len(rtss_folder):len(rtss_folder)+len(example_id)]
         print("Processing: ", anon_id)
         anonymisation(script_path, file, anon_id)
 
 
 if __name__ == "__main__":
     rtss_folder = input("Path to files: ")
-    # rtss_folder = "modified/good/"
     main()
