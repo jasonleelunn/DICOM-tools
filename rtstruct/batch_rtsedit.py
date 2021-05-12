@@ -128,7 +128,7 @@ def rtsedit(input_data, wrong_list, changes_list, empty_list):
 
     anon_id = input_data[0]
 
-    edit_path = "etherj-cli-tools/bin/rtsedit"
+    edit_path = "../etherj-cli-tools/bin/rtsedit"
 
     files = find_file(anon_id)
 

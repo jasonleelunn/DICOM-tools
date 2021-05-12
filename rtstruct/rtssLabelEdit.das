@@ -11,7 +11,7 @@ version "6.1"
 
 
 
-newLabel := "ALT_single_ROI"
+newLabel := "ALT_structureSet"
 
 (3006,0002) := newLabel
 
