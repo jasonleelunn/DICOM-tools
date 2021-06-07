@@ -13,6 +13,7 @@ import requests
 from progress.bar import ChargingBar
 import logging
 import datetime
+import getpass
 
 # setup logging
 datetime = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
@@ -29,7 +30,7 @@ def user_pass_data(which_xnat):
     code = 0
     while not code == 200 or code == 403:
         u = input(f"Enter {which_xnat} XNAT Username: ")
-        pw = input(f"Enter {which_xnat} XNAT Password: ")
+        pw = getpass.getpass(f"Enter {which_xnat} XNAT Password: ")
         check = requests.get(f'{dom}', auth=(u, pw))
         code = check.status_code
         if code == 200 or code == 403:

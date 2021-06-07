@@ -42,7 +42,7 @@ def main():
     with requests.Session() as request_session:
         request_session.auth = (username, password)
         for row in data:
-            session_id = row['session_id']
+            session_id = row[headers[0]]
             viewer_json_generation_call(request_session, domain, project_id, session_id)
 
 

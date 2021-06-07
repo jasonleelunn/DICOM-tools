@@ -11,8 +11,12 @@ version "6.1"
 
 
 
-newLabel := "ALT_structureSet"
+// newLabel := "ALT_structureSet"
 
-(3006,0002) := newLabel
+// (3006,0002) := newLabel
 
+date := (3006,0008)
+time := (3006,0009)
 
+(0008,0020) := date
+(0008,0030) := time

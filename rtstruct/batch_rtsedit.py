@@ -34,6 +34,22 @@ def find_file(anon_id):
     return filepaths
 
 
+def find_all_files():
+    filepaths = []
+    for root, dirs, files in os.walk(rtss_folder):
+        for file in files:
+            if file.endswith(".dcm"):
+                filepaths.append(os.path.join(root, file))
+
+    return filepaths
+
+
+def read_dicom_file(file):
+    header = pydicom.read_file(file, force=True, stop_before_pixels=True)
+
+    return header
+
+
 def get_roi_labels(filename):
     file = pydicom.read_file(filename, force=True)
     labels = []
@@ -122,28 +138,29 @@ def label_conversion(missing_list, full_list, changes, anon_id):
     return matches
 
 
-def rtsedit(input_data, wrong_list, changes_list, empty_list):
+def rtsedit(anon_id, input_data, files, wrong_list, changes_list, empty_list):
     clean_edit = False
     roi_info = "BLANK"
 
-    anon_id = input_data[0]
-
     edit_path = "../etherj-cli-tools/bin/rtsedit"
-
-    files = find_file(anon_id)
 
     # add feature to look in all relevant files and split ROIs correctly
     for file in files:
-        include_rois = input_data[1:]
+        include_rois = input_data
         found_labels, file_type_bool = get_roi_labels(file)
         empty_labels = empty_roi_check(file)
 
-        if args.ctv:
-            requested_ctv_check = [roi for roi in include_rois if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
-            present_ctv_check = [roi for roi in found_labels if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+        if args.strings:
+            include_rois = []
+            for roi_string in input_data:
+                # print("found: ", found_labels)
+                # print(roi_string, include_rois)
+                # requested_ctv_check = [roi for roi in include_rois if re.search(re.escape('ctv'), roi, flags=re.IGNORECASE)]
+                present_string_check = [roi for roi in found_labels if
+                                        re.search(re.escape(roi_string), roi, flags=re.IGNORECASE)]
 
-            if present_ctv_check and not requested_ctv_check:
-                include_rois.extend(present_ctv_check)
+                if present_string_check:
+                    include_rois.extend(present_string_check)
 
         if file_type_bool:
 
@@ -199,7 +216,7 @@ def rtsedit(input_data, wrong_list, changes_list, empty_list):
                 global copy_count
                 copy_count += 1
                 copy_file(file, output_file)
-                label_edit(output_file)
+            label_edit(output_file)
 
             if not error_bool and not output_bool:
                 clean_edit = True
@@ -236,16 +253,16 @@ def dot_das_insertion():
     custom_script_path = "customised_script.das"
     with open(custom_script_path, 'w') as custom_script:
         custom_script.write(content)
-        custom_script.write(series_date)
-        custom_script.write(series_time)
+        # custom_script.write(series_date)
+        # custom_script.write(series_time)
 
     return custom_script_path
 
 
 def label_edit(file_path):
-    custom_script_path = dot_das_insertion()
-
-    jar_path = "dicom-edit.jar"
+    # custom_script_path = dot_das_insertion()
+    custom_script_path = script_path
+    jar_path = "../dicom-edit.jar"
     run_jar = f"java -jar {jar_path}"
 
     command = f"{run_jar} -s {custom_script_path} -i {file_path} -o {file_path}"
@@ -278,8 +295,8 @@ def cli_args():
     parser = argparse.ArgumentParser(
         description="A program to automate the editing of ROI's in DICOM Radiotherapy Structure files.")
 
-    parser.add_argument("-c", "--ctv",
-                        help="enable CTV ROI addition", default=False, action='store_true')
+    parser.add_argument("-s", "--strings",
+                        help="enable named string ROI addition", default=False, action='store_true')
 
     parser.add_argument("-n", "--changes",
                         help="enable copying unchanged files", default=False, action='store_true')
@@ -289,21 +306,45 @@ def cli_args():
 
 
 def main():
-    data_list = read_input_file()
-    count = 0
+    roi_strings = []
     wrong_list = {}
     changes_list = []
     empty_list = {}
 
-    for data in data_list:
-        count += 1
-        print(f"\nEditing RTSTRUCT for patient {data[0]} ({count}/{len(data_list)})")
-        rtsedit(data, wrong_list, changes_list, empty_list)
+    if args.strings:
+        print("Enter strings for search, enter \"DONE\" to move on.")
+        while True:
+            roi_string_input = input("Enter string to search for in ROI labels: ")
+            roi_strings.append(roi_string_input)
+
+            if roi_string_input == "DONE":
+                roi_strings.pop(-1)
+                break
+        print("Strings to search for: ", roi_strings)
+
+        files = find_all_files()
+        for count, file in enumerate(files):
+            dicom_header = read_dicom_file(file)
+            anon_id = str(dicom_header['00100010'].value)
+            num_of_files = len(files)
+            print(f"\nEditing RTSTRUCT for subject {anon_id} ({count+1}/{num_of_files})")
+            rtsedit(anon_id, roi_strings, [file], wrong_list, changes_list, empty_list)
+
+    else:
+        data_list = read_input_file()
+        count = 0
+
+        for data in data_list:
+            count += 1
+            anon_id = data[0]
+            files = find_file(anon_id)
+            print(f"\nEditing RTSTRUCT for patient {anon_id} ({count}/{len(data_list)})")
+            rtsedit(anon_id, data[1:], files, wrong_list, changes_list, empty_list)
 
     if wrong_list:
         print(f"Patients for which files were not edited correctly;")
         print(*wrong_list.keys(), sep='\n')
-        print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
+        # print(f"Number of patients with files not edited correctly = {len(wrong_list)}/{len(data_list)}")
 
     save_summary(wrong_list, changes_list, empty_list)
 
@@ -315,8 +356,8 @@ def main():
 
 if __name__ == "__main__":
     args = cli_args()
-    rtss_folder = input("Path to files: ")
-    # rtss_folder = "rtss_test"
+    # rtss_folder = input("Path to files: ")
+    rtss_folder = "../../../OCTAPUS/GSTT/RTSTRUCTs/OCTA_C_GU_077"
     script_path = "rtssLabelEdit.das"
     copy_count = 0
     main()

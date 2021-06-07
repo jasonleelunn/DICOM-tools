@@ -1,5 +1,7 @@
 import os
 import pydicom
+import numpy as np
+import array
 from tkinter.filedialog import askopenfilename
 
 # input_file = askopenfilename(title="Select an RTSTRUCT file to analyse")
@@ -11,11 +13,11 @@ from tkinter.filedialog import askopenfilename
 # print(ds)
 
 
-def find_file(anon_id, folder):
+def find_file(folder):
     filepaths = []
     for root, dirs, files in os.walk(folder):
         for file in files:
-            if file.endswith(".dcm") and anon_id in file:
+            if file.endswith(".dcm"):
                 filepaths.append(os.path.join(root, file))
 
     return filepaths
@@ -24,7 +26,9 @@ def find_file(anon_id, folder):
 def get_roi_labels(input_file):
     labels = []
     file = pydicom.read_file(input_file, force=True)
+    # print(file)
     modality = file.Modality
+    # print(modality)
 
     if 'RTSTRUCT' in modality:
         sequences = file.StructureSetROISequence
@@ -40,35 +44,33 @@ def get_roi_labels(input_file):
 
 
 def main():
-    # rtss_folder = "rtss_test"
-    rtss_folder = input("Path to rtss files: ")
-    patient_num = input("Enter anonymous ID number: ")
-    patient_id = f"RS-5293-{patient_num}"
-    files = find_file(patient_id, rtss_folder)
+    rtss_folder = "../../../OCTAPUS/Imperial/CX-OCTA-ARMC-086"
+    # rtss_folder = "modified"
+    # rtss_folder = input("Path to rtss files: ")
+    files = find_file(rtss_folder)
     for file in files:
         label_list, modality = get_roi_labels(file)
-        if 'RTSTRUCT' in modality:
-            print(label_list)
-            ds = pydicom.read_file(file, force=True)
-            # print(ds)
-            # info_sequence = ds.StructureSetROISequence
-            # for seq in info_sequence:
-            #     roi_dict[seq.ROINumber] = seq.ROIName
-            #
-            # contour_sequence = ds.ROIContourSequence
-            # for seq in contour_sequence:
-            #     if seq.ReferencedROINumber:
-            #         try:
-            #             contour = seq.ContourSequence
-            #         except AttributeError as e:
-            #             num = seq.ReferencedROINumber
-            #             print(f"{roi_name} is empty")
-            #             print(e)
+        ds = pydicom.read_file(file, force=True)
+        try:
+            # print(file)
+            split_file = file.split("/")
+            # filename = split_file[-1][4:20]
+            filename = split_file[5]
+            if filename == "CX-OCTA-ARMC-086":
+                # print(filename, label_list)
+                print(ds)
+                exit()
+            # print(label_list)
 
-            # number = thing.ReferencedROINumber
-            # print("\n", file[22:33])
-            # for seq in info_sequence:
-            #     print(seq.ROINumber, seq.ROIName)
+            # print(ds['00640002'][0]['00640005'][0]['00640009'])
+            # print(ds['00640002'][0]['00640005'][0]['00640007'])
+            # original_array = ds['00640002'][0]['00640005'][0]['00640009'].value
+            # # new_array = np.array(original_array)
+            #
+            # new_array = array.array('f', original_array)
+            # print(min(new_array), max(new_array))
+        except KeyError as e:
+            print("tag not found")
 
 
 if __name__ == "__main__":
