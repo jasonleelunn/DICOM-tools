@@ -44,7 +44,7 @@ def get_roi_labels(input_file):
 
 
 def main():
-    rtss_folder = "../../../OCTAPUS/Imperial/CX-OCTA-ARMC-086"
+    rtss_folder = "/Users/jlunn/Downloads"
     # rtss_folder = "modified"
     # rtss_folder = input("Path to rtss files: ")
     files = find_file(rtss_folder)
@@ -53,13 +53,13 @@ def main():
         ds = pydicom.read_file(file, force=True)
         try:
             # print(file)
-            split_file = file.split("/")
+            # split_file = file.split("/")
             # filename = split_file[-1][4:20]
-            filename = split_file[5]
-            if filename == "CX-OCTA-ARMC-086":
+            # filename = split_file[5]
+            # if filename == "CX-OCTA-ARMC-086":
                 # print(filename, label_list)
-                print(ds)
-                exit()
+            print(ds)
+            exit()
             # print(label_list)
 
             # print(ds['00640002'][0]['00640005'][0]['00640009'])

@@ -5,3 +5,4 @@ urllib3~=1.26.5
 xnat~=0.3.24
 progress~=1.5
 numpy~=1.20.3
+pykeepass~=4.0.1

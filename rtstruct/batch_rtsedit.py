@@ -357,7 +357,7 @@ def main():
 if __name__ == "__main__":
     args = cli_args()
     # rtss_folder = input("Path to files: ")
-    rtss_folder = "../../../OCTAPUS/GSTT/RTSTRUCTs/OCTA_C_GU_077"
+    rtss_folder = "/Users/jlunn/Downloads"
     script_path = "rtssLabelEdit.das"
     copy_count = 0
     main()
