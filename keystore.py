@@ -6,6 +6,7 @@ import pykeepass
 import getpass
 import pathlib
 import argparse
+import pprint
 
 
 class PasswordDatabase:
@@ -68,6 +69,25 @@ def get_new_entry_details():
     return label, domain, username, password
 
 
+def retrieve_entry_details():
+    keystore = PasswordDatabase()
+    entries = keystore.database_instance.entries
+    entries_id = {index: entry for index, entry in enumerate(entries)}
+
+    pretty = pprint.PrettyPrinter(width=30)
+    pretty.pprint(entries_id)
+
+    selected_id = int(input("Enter the index of the entry to retrieve from the keystore: "))
+    selected_entry = entries_id[selected_id]
+
+    label = selected_entry.title
+    url = selected_entry.url
+    username = selected_entry.username
+    password = selected_entry.password
+
+    return label, url, username, password
+
+
 def main():
     keystore = PasswordDatabase()
 
@@ -81,8 +101,8 @@ def main():
 
     if args.delete:
         delete_id = int(input("Enter the index of the entry to delete from the keystore: "))
-        delete_entry = entries_id[delete_id]
-        keystore.delete_keypass_entry(delete_entry)
+        entry_for_deletion = entries_id[delete_id]
+        keystore.delete_keypass_entry(entry_for_deletion)
 
 
 if __name__ == "__main__":
