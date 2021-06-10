@@ -2,16 +2,19 @@
 
 # Author: Jason Lunn, The Institute of Cancer Research, UK
 
-import pykeepass
+import os
 import getpass
 import pathlib
 import argparse
 import pprint
 
+import pykeepass
+
 
 class PasswordDatabase:
     def __init__(self):
-        self.database_location = "keystore.kdbx"
+        database_path = pathlib.Path(__file__).parent.absolute()
+        self.database_location = pathlib.Path(f"{database_path}/keystore.kdbx")
         self.database_instance = None
         self.master_password = None
 
