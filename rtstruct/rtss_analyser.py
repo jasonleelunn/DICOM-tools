@@ -1,8 +1,10 @@
 import os
+import pathlib
+
 import pydicom
 import numpy as np
 import array
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 
 # input_file = askopenfilename(title="Select an RTSTRUCT file to analyse")
 # # input_file ="rtss_test/DICOM/anon_rtss.dcm"
@@ -44,9 +46,8 @@ def get_roi_labels(input_file):
 
 
 def main():
-    rtss_folder = "/Users/jlunn/Downloads"
-    # rtss_folder = "modified"
-    # rtss_folder = input("Path to rtss files: ")
+    rtss_folder = pathlib.Path(askdirectory())
+
     files = find_file(rtss_folder)
     for file in files:
         label_list, modality = get_roi_labels(file)
@@ -56,8 +57,6 @@ def main():
             # split_file = file.split("/")
             # filename = split_file[-1][4:20]
             # filename = split_file[5]
-            # if filename == "CX-OCTA-ARMC-086":
-                # print(filename, label_list)
             print(ds)
             exit()
             # print(label_list)
@@ -75,14 +74,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# rtss_folder = "extracted"
-# patient_num = input("Enter anonymous ID number: ")
-# patient_id = f"RS-5293-{patient_num}"
-# files = find_file(patient_id)
-#
-# for filepath in files:
-#     label_list = get_roi_labels(filepath)
-#     if label_list:
-#         print(f"\n{label_list}")

@@ -3,7 +3,7 @@
 # Author: Jason Lunn, The Institute of Cancer Research, UK
 
 # Script to automate using the CLI etherj tool 'rtsedit' on multiple RTSTRUCT files to edit ROI collections
-
+import pathlib
 import re
 import csv
 import json
@@ -12,7 +12,7 @@ import subprocess
 import datetime
 import pydicom
 import argparse
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 from difflib import get_close_matches
 
 
@@ -356,8 +356,7 @@ def main():
 
 if __name__ == "__main__":
     args = cli_args()
-    # rtss_folder = input("Path to files: ")
-    rtss_folder = "/Users/jlunn/Downloads"
+    rtss_folder = pathlib.Path(askdirectory())
     script_path = "rtssLabelEdit.das"
     copy_count = 0
     main()

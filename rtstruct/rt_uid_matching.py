@@ -43,13 +43,49 @@ def get_xnat_subject_details(domain, project_id):
     return subject_identities
 
 
-def search_xnat_ct_sessions(domain, subject_id, rt_frame_uid):
-    request_object = xnat_session.get(f"{domain}/data/subjects/{subject_id}/experiments")
+def search_xnat_sessions(domain, project_id, subject_id):
+    request_object = xnat_session.get(f"{domain}/data/projects/{project_id}/subjects/{subject_id}/experiments?format"
+                                      f"=json")
     request_json = request_object.json()
-    experiment_list_full_data = request_json['ResultSet']['Result']
-    print(experiment_list_full_data)
+    sessions_list_full_data = request_json['ResultSet']['Result']
 
-    exit()
+    return sessions_list_full_data
+
+
+def search_xnat_scans(domain, session_id):
+    request_object = xnat_session.get(f"{domain}/data/experiments/{session_id}/scans?format=json")
+    request_json = request_object.json()
+    scans_list_full_data = request_json['ResultSet']['Result']
+
+    return scans_list_full_data
+
+
+def download_xnat_scan_header(domain, project_id, subject_id, session_id, scan_id):
+    request_object = xnat_session.get(f"{domain}/data/services/dicomdump?src=/archive/projects/{project_id}/"
+                                      f"subjects/{subject_id}/experiments/{session_id}/scans/{scan_id}")
+    request_json = request_object.json()
+    scan_header = request_json['ResultSet']['Result']
+
+    return scan_header
+
+
+def get_tag_data_from_xnat_header(xnat_scan_header, tag_number: str):
+    found_tag_dict = list(filter(lambda tag_dict: tag_dict['tag1'] == tag_number, xnat_scan_header))[0]
+
+    return found_tag_dict
+
+
+def modify_local_file_uids(xnat_scan_header, local_file_header, local_file_path):
+    study_uid_tag_dict = get_tag_data_from_xnat_header(xnat_scan_header, '(0020,000D)')
+    series_uid_tag_dict = get_tag_data_from_xnat_header(xnat_scan_header, '(0020,000E)')
+
+    study_uid = study_uid_tag_dict['value']
+    series_uid = series_uid_tag_dict['value']
+
+    local_file_header['30060010'][0]['30060012'][0]['00081155'].value = study_uid
+    local_file_header['30060010'][0]['30060012'][0]['30060014'][0]['0020000e'].value = series_uid
+
+    local_file_header.save_as(local_file_path)
 
 
 def main():
@@ -58,25 +94,37 @@ def main():
 
     project_id = input("Enter Project ID: ")
     subject_dict = get_xnat_subject_details(url, project_id)
-    print(subject_dict)
 
     local_folder = askdirectory()
     dicom_files = find_dicom_files(local_folder)
 
     for file in dicom_files:
         local_dicom_header = read_dicom_header(file)
-        patient_name = local_dicom_header['00100010'].value
+        patient_name = str(local_dicom_header['00100010'].value)
         frame_of_reference_uid = local_dicom_header['30060010'][0]['00200052'].value
 
-        print(patient_name)
+        try:
+            subject_id = subject_dict[patient_name]
+        except KeyError as e:
+            continue
+        else:
+            list_of_sessions = search_xnat_sessions(url, project_id, subject_id)
+            for session in list_of_sessions:
+                session_id = session['ID']
+                list_of_scans = search_xnat_scans(url, session_id)
+                for scan in list_of_scans:
+                    scan_id = scan['ID']
+                    xnat_scan_header = download_xnat_scan_header(url, project_id, subject_id, session_id, scan_id)
+                    modality_tag_dict = get_tag_data_from_xnat_header(xnat_scan_header, '(0008,0060)')
 
-        # try:
-        subject_id = subject_dict[patient_name]
-        print(subject_id)
-        # except KeyError as e:
-        #     continue
-        # else:
-        #     search_xnat_ct_sessions(url, subject_id, frame_of_reference_uid)
+                    if modality_tag_dict['value'] == 'CT':
+                        frame_uid_tag_dict = get_tag_data_from_xnat_header(xnat_scan_header, '(0020,0052)')
+
+                        if frame_uid_tag_dict['value'] == frame_of_reference_uid:
+                            modify_local_file_uids(xnat_scan_header, local_dicom_header, file)
+
+                    else:
+                        continue
 
 
 if __name__ == "__main__":
