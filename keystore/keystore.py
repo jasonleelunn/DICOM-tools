@@ -102,6 +102,16 @@ def main():
     entries_id = {index: entry for index, entry in enumerate(entries)}
     print(entries_id)
 
+    if args.view:
+        view_id = int(input("Enter the index of the entry to view from the keystore: "))
+        entry_to_view = entries_id[view_id]
+
+        label = entry_to_view.title
+        url = entry_to_view.url
+        username = entry_to_view.username
+        password = entry_to_view.password
+        print(label, url, username, password)
+
     if args.delete:
         delete_id = int(input("Enter the index of the entry to delete from the keystore: "))
         entry_for_deletion = entries_id[delete_id]
