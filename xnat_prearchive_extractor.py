@@ -165,7 +165,7 @@ def give_timestamp():
     timestamp = input("Timestamp: ")
     anon_id = input("Anon ID: ")
 
-    copy_data(pre_path, (timestamp, anon_id), "RPYS_RPACS01", 1)
+    copy_data(pre_path, {anon_id: timestamp}, "RPYS_RPACS01", 1)
 
 
 def main():
