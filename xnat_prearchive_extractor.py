@@ -158,6 +158,16 @@ def anonymisation(script_path, file_path, anon_id, project_id):
         raise SystemExit
 
 
+def give_timestamp():
+    with open("login_details.json", 'r') as details_file:
+        details = json.load(details_file)
+    pre_path = details['prearchive_path']
+    timestamp = input("Timestamp: ")
+    anon_id = input("Anon ID: ")
+
+    copy_data(pre_path, (timestamp, anon_id), "RPYS_RPACS01", 1)
+
+
 def main():
     # project = input(f"Enter Project ID: ")
     project = "RPYS_RPACS01"
