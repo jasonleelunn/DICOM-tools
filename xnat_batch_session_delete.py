@@ -7,37 +7,21 @@ Script to mass delete a selection of scan sessions from XNAT
 """
 
 import csv
-from tkinter.filedialog import askopenfilename
+import datetime
+import logging
 import time
+from tkinter.filedialog import askopenfilename
+
 import requests
 from progress.bar import ChargingBar
-import logging
-import datetime
-import getpass
+
+import keystore.keystore as keystore
+
 
 # setup logging
 datetime = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
 log_path = f"logs/{datetime}_batch_deletion.log"
 logging.basicConfig(filename=log_path, filemode='w', format='%(asctime)s %(message)s', level=logging.INFO)
-
-
-# simple CLI interface to get XNAT login credentials
-def user_pass_data(which_xnat):
-    u = None
-    pw = None
-
-    dom = input(f"Enter {which_xnat} XNAT domain (e.g. http://example.xnat.org): ")
-    code = 0
-    while not code == 200 or code == 403:
-        u = input(f"Enter {which_xnat} XNAT Username: ")
-        pw = getpass.getpass(f"Enter {which_xnat} XNAT Password: ")
-        check = requests.get(f'{dom}', auth=(u, pw))
-        code = check.status_code
-        if code == 200 or code == 403:
-            print(f"Successful Login to {which_xnat} XNAT.")
-        else:
-            print("Could not verify credentials with XNAT. Please try again.")
-    return dom, u, pw
 
 
 class FancyBar(ChargingBar):
@@ -72,10 +56,27 @@ class App:
             logging.warning(f"Exception occurred while processing scan {scan_id} "
                             f"in session {experiment_id} as follows:\n {e}")
 
+    def whole_experiment_api_delete_call(self, experiment_id):
+        try:
+            delete_request = self.session.delete(f"{self.domain}/data/experiments/{experiment_id}")
+
+            if delete_request.status_code == 200:
+                logging.info(f"Successfully deleted session {experiment_id}")
+            elif delete_request.status_code == 404:
+                logging.warning(f"Unable to find session {experiment_id}")
+            else:
+                logging.warning(f"Unexpected response from XNAT with http code {delete_request.status_code} "
+                                f"for session {experiment_id}:\n"
+                                f"{delete_request.text}")
+        except Exception as e:
+            logging.warning(f"Exception occurred while processing "
+                            f"session {experiment_id} as follows:\n {e}")
+
     def delete_data(self):
         with FancyBar("Removing Data", max=len(self.search_data)) as bar:
             for line in self.search_data:
                 self.api_delete_call(line['Session ID'], line['Scan ID'])
+                # self.whole_experiment_api_delete_call(line['Session ID'])
                 bar.next()
                 # print(f"Deleting scan set {line['Scan ID']} from session
                 # {line['Session ID']} in project {line['Project ID']}")
@@ -92,12 +93,12 @@ def read_input_file():
 
 
 def main():
-    domain, username, password = user_pass_data("Target")
+    label, url, username, password = keystore.retrieve_entry_details()
     input_data_fields, input_data_rows = read_input_file()
 
     with requests.Session() as session:
-        session.auth = (f'{username}', f'{password}')
-        app = App(session=session, domain=domain,
+        session.auth = (username, password)
+        app = App(session=session, domain=url,
                   search_data_header=input_data_fields, search_data=input_data_rows)
 
         start = time.time()

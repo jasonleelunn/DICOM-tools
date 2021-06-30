@@ -2,34 +2,19 @@
 
 # Author: Jason Lunn, The Institute of Cancer Research, UK
 
-import requests
 from tkinter.filedialog import asksaveasfilename
-import getpass
-import json
+
+import requests
+
+import keystore.keystore as keystore
 
 
-def get_login_details():
-
-    with open("login_details.json", 'r') as details_file:
-        details = json.load(details_file)
-
-    domain = details['domain']
-    # domain = input(f"Enter XNAT Domain: ")
-    username = details['username']
-    # username = input(f"Enter Username for {domain}: ")
-    password = getpass.getpass(prompt=f"Enter Password for {username}@{domain}: ")
-
-    return domain, username, password
-
-
-def get_patient_list(session, domain, user, pw):
-
+def get_patient_list(session, domain):
     project = input(f"Enter Project ID: ")
-    patients = session.get(f'{domain}/data/projects/{project}/subjects',
-                            auth=(user, pw), verify=False)
+    patients = session.get(f'{domain}/data/projects/{project}/subjects')
     patient_json = patients.json()
     patient_label_list = []
-    [patient_label_list.append(pati['label']) for pati in patient_json['ResultSet']['Result']]
+    [patient_label_list.append(patient['label']) for patient in patient_json['ResultSet']['Result']]
 
     return project, patient_label_list
 
@@ -65,22 +50,22 @@ def ask_session_modality():
 
 
 def main(session):
-    dom, u, pw = get_login_details()
-    project, patient_list = get_patient_list(session, dom, u, pw)
-    modality = ask_session_modality()
+    label, dom, username, password = keystore.retrieve_entry_details()
+    session.auth = (username, password)
+    project, patient_list = get_patient_list(session, dom)
+    # modality = ask_session_modality()
+    modality = False
 
     sessions_label_dic = []
     for patient in patient_list:
         if modality:
             sessions = session.get(f'{dom}/data/projects/{project}'
-                                    f'/subjects/{patient}/experiments?xsiType=xnat:{modality}SessionData',
-                                    auth=(u, pw), verify=False)
+                                   f'/subjects/{patient}/experiments?xsiType=xnat:{modality}SessionData')
         else:
             sessions = session.get(f'{dom}/data/projects/{project}'
-                                   f'/subjects/{patient}/experiments',
-                                   auth=(u, pw), verify=False)
+                                   f'/subjects/{patient}/experiments')
         sessions_json = sessions.json()
-        [sessions_label_dic.append((sesh['label'], patient)) for sesh in sessions_json['ResultSet']['Result']]
+        [sessions_label_dic.append((session['ID'], patient)) for session in sessions_json['ResultSet']['Result']]
 
     # sessions_label_dic = session_edit(sessions_label_dic)
     print(f"Number of sessions found: {len(sessions_label_dic)}")
