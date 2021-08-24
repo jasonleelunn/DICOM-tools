@@ -40,7 +40,7 @@ def modify_dicom_headers(file_info_dict):
 
 
 def main():
-    input_directory = "/Users/jlunn/LIBRA/LUC_0031_TO_0100"
+    input_directory = ""
 
     file_info_dict = find_dicom_files(input_directory)
     modify_dicom_headers(file_info_dict)
