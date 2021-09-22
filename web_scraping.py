@@ -20,7 +20,7 @@ def standard_sopclassuids():
         data_dict[f"{data}"] = False
 
     with open("/Users/jlunn/Desktop/sopclassuids.json", 'w') as json_file:
-        json.dump(data_dict, json_file)
+        json.dump(data_dict, json_file, indent=4)
 
 
 def main():
