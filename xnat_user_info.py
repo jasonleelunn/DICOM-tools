@@ -14,6 +14,13 @@ import requests
 import keystore.keystore as keystore
 
 
+def print_active_users(session, url):
+    request = session.get(f"{url}/xapi/users/active")
+    user_list = request.json()
+
+    print(list(user_list.keys()))
+
+
 def get_user_list(session, url):
     # modern way, XNAT with xapi enabled
     request = session.get(f"{url}/xapi/users/current")
@@ -61,7 +68,12 @@ def main():
 
         is_deprecated = input("Deprecated XNAT version (less than 1.7.x)? "
                               "[Press Return for false, type anything else for true]: ")
+
         if not is_deprecated:
+
+            print_active_users(session, url)
+            exit(0)
+
             user_list = get_user_list(session, url)
         else:
             user_list = get_user_list_deprecated(session, url)
