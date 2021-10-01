@@ -14,11 +14,11 @@ import requests
 import keystore.keystore as keystore
 
 
-def print_active_users(session, url):
+def print_active_users(session, url, xnat_label):
     request = session.get(f"{url}/xapi/users/active")
     user_list = request.json()
 
-    print(list(user_list.keys()))
+    print(f"\n{xnat_label} Current Active Users: {list(user_list.keys())}\n")
 
 
 def get_user_list(session, url):
@@ -71,8 +71,7 @@ def main():
 
         if not is_deprecated:
 
-            print_active_users(session, url)
-            exit(0)
+            print_active_users(session, url, xnat_label)
 
             user_list = get_user_list(session, url)
         else:
