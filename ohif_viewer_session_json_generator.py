@@ -2,10 +2,12 @@
 
 # Author: Jason Lunn, The Institute of Cancer Research, UK
 
-import requests
 from tkinter.filedialog import askopenfilename
 import csv
-import getpass
+
+import requests
+
+import keystore.keystore as keystore
 
 
 def read_input_file():
@@ -18,15 +20,6 @@ def read_input_file():
     return fields, lists_out
 
 
-def get_login_details():
-
-    domain = input(f"Enter XNAT Domain: ")
-    username = input(f"Enter Username for {domain}: ")
-    password = getpass.getpass(prompt=f"Enter Password for {username}@{domain}: ")
-
-    return domain, username, password
-
-
 def viewer_json_generation_call(request_session, domain, project_id, experiment_id):
 
     generate_call = request_session.post(f"{domain}/xapi/viewer/projects/{project_id}/experiments/{experiment_id}")
@@ -34,7 +27,7 @@ def viewer_json_generation_call(request_session, domain, project_id, experiment_
 
 
 def main():
-    domain, username, password = get_login_details()
+    label, domain, username, password = keystore.retrieve_entry_details()
     headers, data = read_input_file()
 
     project_id = input(f"Enter Project ID: ")

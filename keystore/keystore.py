@@ -3,6 +3,7 @@
 # Author: Jason Lunn, The Institute of Cancer Research, UK
 
 import os
+import json
 import getpass
 import pathlib
 import argparse
@@ -21,7 +22,13 @@ class PasswordDatabase:
         self.check_keypass_db_exist()
 
     def get_master_password(self):
-        self.master_password = getpass.getpass(prompt="Enter Master Password: ")
+        login_json_path = pathlib.Path("/Users/jlunn/XNAT_VMs/login.json")
+        if login_json_path.exists():
+            with open(login_json_path, 'r') as json_file:
+                login_json = json.load(json_file)
+            self.master_password = login_json['app_password']
+        else:
+            self.master_password = getpass.getpass(prompt="Enter Master Password: ")
 
     def create_master_password(self):
         first_password_input = getpass.getpass(prompt="Enter a Master Password: ")
@@ -72,15 +79,16 @@ def get_new_entry_details():
     return label, domain, username, password
 
 
-def retrieve_entry_details():
+def retrieve_entry_details(selected_id=None):
     keystore = PasswordDatabase()
     entries = keystore.database_instance.entries
     entries_id = {index: entry for index, entry in enumerate(entries)}
 
-    pretty = pprint.PrettyPrinter(width=30)
-    pretty.pprint(entries_id)
+    if selected_id is None:
+        pretty = pprint.PrettyPrinter(width=30)
+        pretty.pprint(entries_id)
+        selected_id = int(input("Enter the index of the entry to retrieve from the keystore: "))
 
-    selected_id = int(input("Enter the index of the entry to retrieve from the keystore: "))
     selected_entry = entries_id[selected_id]
 
     label = selected_entry.title

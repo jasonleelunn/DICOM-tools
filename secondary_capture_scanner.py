@@ -56,9 +56,6 @@ class App:
 
     def xnat_loop(self):
         source_dom, source_u, source_pw = user_pass_data("Source")
-        # source_dom = "http://xnatdev.xnat.org"
-        # source_u = "admin"
-        # source_pw = ""
 
         with xnat.connect(source_dom, user=source_u, password=source_pw) as connection:
             xnat_projects = connection.projects
