@@ -54,7 +54,13 @@ class App:
                             self.upload_path = pathlib.Path(f"{dir_path}/upload")
 
                             self.unzip_data()
-                            self.modify_dicom_header(anon_id)
+                            
+                            try:
+                                self.modify_dicom_header(anon_id)
+                            except AttributeError as e:
+                                self.zip_files_not_processed.append(file_info['Name'])
+                                continue
+
                             self.zip_data()
                             self.upload_data()
 
@@ -76,12 +82,9 @@ class App:
                 header.PatientName = anon_id
                 header.PatientID = anon_id
 
-                try:
-                    session_label = f"{header.StudyDate}_POST"
-                except AttributeError as e:
-                    study_uid = header.StudyInstanceUID
-                    study_uid_digits = study_uid.split('.')[-1]
-                    session_label = f"StudyUID_{study_uid_digits}_POST"
+                study_uid = header.StudyInstanceUID
+                study_uid_digits = study_uid.split('.')[-1]
+                session_label = f"StudyUID_{study_uid_digits}_POST"
 
                 header.PatientComments = f"Project: {self.project_id}; Subject: {anon_id}; " \
                                          f"Session: {session_label}; AA:true"
