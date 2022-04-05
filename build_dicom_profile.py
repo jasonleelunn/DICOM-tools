@@ -92,10 +92,16 @@ def build_attribute_modifications(attribute_dict, profile_choices):
                 profile_action_code = attribute[profile]
 
         modification_str = None
+        # type 1 tags
         if 'D' in profile_action_code:
-            modification_str = f"{attribute['tag_number']} := \"Anon\""
+            if 'SQ' in attribute['VR']:
+                modification_str = f"{attribute['tag_number']}[*] := \"Anon\""
+            else:
+                modification_str = f"{attribute['tag_number']} := \"Anon\""
+        # type 2 tags
         elif 'Z' in profile_action_code:
             modification_str = f"{attribute['tag_number']} := \"\""
+        # type 3 tags
         elif 'X' in profile_action_code:
             modification_str = f"- {attribute['tag_number']}"
 
